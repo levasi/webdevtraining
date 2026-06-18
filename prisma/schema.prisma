@@ -1,0 +1,297 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Auth (Better Auth) ───────────────────────────────────────────────────────
+
+model User {
+  id            String   @id @default(cuid())
+  name          String
+  email         String   @unique
+  emailVerified Boolean  @default(false)
+  image         String?
+  role          UserRole @default(USER)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  sessions          Session[]
+  accounts          Account[]
+  bookmarks         Bookmark[]
+  notes             Note[]
+  progress          Progress[]
+  quizAttempts      QuizAttempt[]
+  challengeAttempts ChallengeAttempt[]
+  studyHistory      StudyHistory[]
+
+  @@map("user")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@map("account")
+}
+
+model Verification {
+  id         String    @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime? @default(now())
+  updatedAt  DateTime? @updatedAt
+
+  @@map("verification")
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum Difficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+  SHORT_ANSWER
+  FLASHCARD
+}
+
+enum LearningMode {
+  FLASHCARD
+  QUIZ
+  CODING
+  API_CHALLENGE
+  INTERVIEW
+}
+
+enum ProgressStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  MASTERED
+}
+
+// ─── Content ──────────────────────────────────────────────────────────────────
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  icon        String?
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  questions  Question[]
+  challenges Challenge[]
+  quizzes    Quiz[]
+  progress   Progress[]
+}
+
+model Question {
+  id          String       @id @default(cuid())
+  categoryId  String
+  category    Category     @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  title       String
+  content     String       @db.Text
+  explanation String?      @db.Text
+  difficulty  Difficulty
+  type        QuestionType @default(MULTIPLE_CHOICE)
+  tags        String[]
+  isPublished Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  answers       Answer[]
+  bookmarks     Bookmark[]
+  notes         Note[]
+  progress      Progress[]
+  quizQuestions QuizQuestion[]
+  studyHistory  StudyHistory[]
+}
+
+model Answer {
+  id         String   @id @default(cuid())
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  content    String
+  isCorrect  Boolean  @default(false)
+  sortOrder  Int      @default(0)
+}
+
+model Quiz {
+  id          String      @id @default(cuid())
+  title       String
+  description String?
+  categoryId  String?
+  category    Category?   @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  difficulty  Difficulty?
+  timeLimit   Int?
+  isPublished Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  questions QuizQuestion[]
+  attempts  QuizAttempt[]
+}
+
+model QuizQuestion {
+  id         String   @id @default(cuid())
+  quizId     String
+  quiz       Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  sortOrder  Int      @default(0)
+
+  @@unique([quizId, questionId])
+}
+
+model QuizAttempt {
+  id             String    @id @default(cuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quizId         String
+  quiz           Quiz      @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  score          Float
+  totalQuestions Int
+  answers        Json
+  startedAt      DateTime  @default(now())
+  completedAt    DateTime?
+}
+
+model Challenge {
+  id           String     @id @default(cuid())
+  categoryId   String
+  category     Category   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  title        String
+  description  String     @db.Text
+  difficulty   Difficulty
+  starterCode  String     @db.Text
+  solutionCode String     @db.Text
+  testCases    Json
+  hints        String[]
+  isPublished  Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  attempts ChallengeAttempt[]
+  progress Progress[]
+}
+
+model ChallengeAttempt {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  challengeId String
+  challenge   Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  code        String    @db.Text
+  passed      Boolean
+  testResults Json?
+  createdAt   DateTime  @default(now())
+}
+
+// ─── User data ────────────────────────────────────────────────────────────────
+
+model Bookmark {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, questionId])
+}
+
+model Note {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questionId String?
+  question   Question? @relation(fields: [questionId], references: [id], onDelete: SetNull)
+  content    String    @db.Text
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+model Progress {
+  id            String         @id @default(cuid())
+  userId        String
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questionId    String?
+  question      Question?      @relation(fields: [questionId], references: [id], onDelete: SetNull)
+  challengeId   String?
+  challenge     Challenge?     @relation(fields: [challengeId], references: [id], onDelete: SetNull)
+  categoryId    String?
+  category      Category?      @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  mode          LearningMode
+  status        ProgressStatus @default(NOT_STARTED)
+  score         Float?
+  attempts      Int            @default(0)
+  lastStudiedAt DateTime       @default(now())
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@unique([userId, questionId, mode])
+  @@unique([userId, challengeId, mode])
+}
+
+model StudyHistory {
+  id         String       @id @default(cuid())
+  userId     String
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questionId String?
+  question   Question?    @relation(fields: [questionId], references: [id], onDelete: SetNull)
+  mode       LearningMode
+  duration   Int?
+  metadata   Json?
+  createdAt  DateTime     @default(now())
+}
+
+model SiteSettings {
+  id        String   @id @default("singleton")
+  mainFont  String   @default("geist")
+  updatedAt DateTime @updatedAt
+
+  @@map("site_settings")
+}
