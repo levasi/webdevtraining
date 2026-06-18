@@ -41,8 +41,16 @@ const features = [
 ];
 
 export default async function HomePage() {
-  const session = await auth.api.getSession({ headers: await headers() });
-  const startHref = session?.user ? "/categories" : "/register";
+  let startHref = "/register";
+
+  try {
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (session?.user) {
+      startHref = "/categories";
+    }
+  } catch {
+    // Database or auth unavailable during build/local setup.
+  }
 
   return (
     <div className="w-full px-4 py-12 sm:px-6">

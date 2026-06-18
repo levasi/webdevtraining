@@ -1,4 +1,4 @@
-import { db } from "@/lib/db";
+import { db, hasDatabaseUrl } from "@/lib/db";
 import {
   DEFAULT_MAIN_FONT,
   isMainFontKey,
@@ -6,6 +6,10 @@ import {
 } from "@/lib/fonts";
 
 export async function getMainFont(): Promise<MainFontKey> {
+  if (!hasDatabaseUrl()) {
+    return DEFAULT_MAIN_FONT;
+  }
+
   try {
     const settings = await db.siteSettings.findUnique({
       where: { id: "singleton" },
