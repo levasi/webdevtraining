@@ -10,8 +10,7 @@ if (!process.env.__CHALLENGES_VERIFY_TSX__) {
     {
       stdio: "inherit",
       env: { ...process.env, __CHALLENGES_VERIFY_TSX__: "1" },
-    },
-  );
+    };
   process.exit(result.status ?? 1);
 }
 
