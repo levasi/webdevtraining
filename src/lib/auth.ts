@@ -6,6 +6,9 @@ import { getAppUrl } from "@/lib/app-url";
 
 const appUrl = getAppUrl();
 
+const googleClientId = process.env.GOOGLE_CLIENT_ID;
+const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
+
 export const auth = betterAuth({
   secret:
     process.env.BETTER_AUTH_SECRET ??
@@ -17,13 +20,16 @@ export const auth = betterAuth({
     provider: "postgresql",
   }),
   socialProviders: {
-    google: {
-      clientId: process.env.GOOGLE_CLIENT_ID as string,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
-      // Match poetryhub / Google Cloud redirect URIs: /api/auth/google/callback
-      redirectURI: `${appUrl}/api/auth/google/callback`,
-      prompt: "select_account",
-    },
+    ...(googleClientId && googleClientSecret
+      ? {
+          google: {
+            clientId: googleClientId,
+            clientSecret: googleClientSecret,
+            redirectURI: `${appUrl}/api/auth/google/callback`,
+            prompt: "select_account",
+          },
+        }
+      : {}),
   },
   account: {
     accountLinking: {

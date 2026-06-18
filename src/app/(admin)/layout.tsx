@@ -1,3 +1,5 @@
+import { DatabaseGate } from "@/components/layout/database-gate";
+
 export const dynamic = "force-dynamic";
 
 export default function AdminLayout({
@@ -5,5 +7,5 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return children;
+  return <DatabaseGate>{children}</DatabaseGate>;
 }
