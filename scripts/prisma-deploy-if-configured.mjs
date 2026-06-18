@@ -1,7 +1,7 @@
 import { spawnSync } from "node:child_process";
 
 if (process.env.DATABASE_URL || process.env.DIRECT_DATABASE_URL) {
-  const result = spawnSync("npx", ["prisma", "db", "push", "--skip-generate"], {
+  const result = spawnSync("npx", ["prisma", "db", "push"], {
     stdio: "inherit",
     shell: process.platform === "win32",
   });
