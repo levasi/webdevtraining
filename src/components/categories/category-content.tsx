@@ -3,18 +3,13 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
-import { DifficultyBadge } from "@/components/categories/category-grid";
-import { QuestionCard } from "@/components/questions/question-card";
-import { QuizQuestionCard } from "@/components/quiz/quiz-question-card";
-import { Badge } from "@/components/ui/badge";
+import { ChallengeDetailPanel } from "@/components/challenges/challenge-detail-panel";
+import { ContentSidebar } from "@/components/layout/content-sidebar";
+import { SidebarDetailLayout } from "@/components/layout/sidebar-detail-layout";
+import { QuestionCompletionCheckbox } from "@/components/questions/question-completion-checkbox";
+import { QuestionDetailPanel } from "@/components/questions/question-detail-panel";
+import { QuizQuestionPlayer } from "@/components/quiz/quiz-question-player";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -24,9 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DIFFICULTY_LABELS } from "@/lib/constants";
-import {
-  filterQuizEligibleQuestions,
-} from "@/lib/questions/quiz-eligible";
+import { filterQuizEligibleQuestions } from "@/lib/questions/quiz-eligible";
 import {
   CATEGORY_SORT_LABELS,
   type CategorySortOption,
@@ -44,6 +37,9 @@ type CategoryTab = "questions" | "challenges" | "quizzes";
 
 type CategoryContentProps = {
   category: {
+    id: string;
+    name: string;
+    slug: string;
     questions: CategoryQuestion[];
     challenges: Challenge[];
   };
@@ -88,6 +84,31 @@ function getFirstAvailableTab(category: CategoryContentProps["category"]): Categ
   }
 
   return "questions";
+}
+
+function useSyncedSelection<T extends { id: string }>(items: T[]) {
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (items.length === 0) {
+      setSelectedId(null);
+      return;
+    }
+
+    if (!selectedId || !items.some((item) => item.id === selectedId)) {
+      setSelectedId(items[0].id);
+    }
+  }, [items, selectedId]);
+
+  return [selectedId, setSelectedId] as const;
+}
+
+function EmptyDetail({ message }: { message: string }) {
+  return (
+    <div className="flex h-full min-h-48 items-center justify-center p-6 text-sm text-muted-foreground">
+      {message}
+    </div>
+  );
 }
 
 export function CategoryContent({
@@ -161,6 +182,33 @@ export function CategoryContent({
     return sortCategoryItems(items, sort);
   }, [quizQuestions, difficultyFilter, sort]);
 
+  const [selectedQuestionId, setSelectedQuestionId] =
+    useSyncedSelection(visibleQuestions);
+  const [selectedChallengeId, setSelectedChallengeId] =
+    useSyncedSelection(filteredChallenges);
+  const [selectedQuizId, setSelectedQuizId] =
+    useSyncedSelection(filteredQuizQuestions);
+
+  const selectedQuestion = visibleQuestions.find(
+    (question) => question.id === selectedQuestionId,
+  );
+  const selectedChallenge = filteredChallenges.find(
+    (challenge) => challenge.id === selectedChallengeId,
+  );
+  const selectedChallengeWithCategory = selectedChallenge
+    ? {
+      ...selectedChallenge,
+      category: {
+        id: category.id,
+        name: category.name,
+        slug: category.slug,
+      },
+    }
+    : null;
+  const selectedQuizQuestion = filteredQuizQuestions.find(
+    (question) => question.id === selectedQuizId,
+  );
+
   function handleCompletionChange(questionId: string, completed: boolean) {
     setCompletedIds((current) => {
       const next = new Set(current);
@@ -172,6 +220,54 @@ export function CategoryContent({
       return next;
     });
   }
+
+  const filters = (
+    <div className="flex flex-col gap-3 p-3 sm:flex-row sm:flex-wrap sm:items-center">
+      <Select
+        value={difficultyFilter}
+        onValueChange={(value) => setDifficultyFilter(value as DifficultyFilter)}
+      >
+        <SelectTrigger className="w-full sm:w-48" aria-label="Filter by difficulty">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {difficultyFilters.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <Select
+        value={sort}
+        onValueChange={(value) => setSort(value as CategorySortOption)}
+      >
+        <SelectTrigger className="w-full sm:w-64" aria-label="Sort items">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {sortOptions.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      {activeTab === "questions" ? (
+        <div className="flex items-center">
+          <Checkbox
+            variant="completed"
+            checked={showCompleted}
+            onCheckedChange={(checked) => setShowCompleted(checked === true)}
+            aria-label="Show completed"
+            title="Show completed"
+          />
+        </div>
+      ) : null}
+    </div>
+  );
 
   if (availableTabs.length === 0) {
     return (
@@ -203,127 +299,141 @@ export function CategoryContent({
         </div>
       ) : null}
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-        <Select
-          value={difficultyFilter}
-          onValueChange={(value) => setDifficultyFilter(value as DifficultyFilter)}
-        >
-          <SelectTrigger className="w-full sm:w-48" aria-label="Filter by difficulty">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {difficultyFilters.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select
-          value={sort}
-          onValueChange={(value) => setSort(value as CategorySortOption)}
-        >
-          <SelectTrigger className="w-full sm:w-64" aria-label="Sort items">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {sortOptions.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        {activeTab === "questions" ? (
-          <div className="flex items-center sm:ml-auto">
-            <Checkbox
-              variant="completed"
-              checked={showCompleted}
-              onCheckedChange={(checked) => setShowCompleted(checked === true)}
-              aria-label="Show completed"
-              title="Show completed"
-            />
-          </div>
-        ) : null}
-      </div>
+      {filters}
 
       {hasQuestions ? (
         <TabsContent value="questions" className="mt-0">
-        {visibleQuestions.length === 0 ? (
-          <p className="text-muted-foreground">
-            {filteredQuestions.length === 0
-              ? "No questions match the current filter."
-              : "No incomplete questions match the current filter. Check Show completed to review finished items."}
-          </p>
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {visibleQuestions.map((question) => (
-              <QuestionCard
-                key={question.id}
-                question={question}
-                showCategory={false}
-                isCompleted={completedIds.has(question.id)}
-                onCompletionChange={handleCompletionChange}
+          <SidebarDetailLayout
+            sidebar={
+              <ContentSidebar
+                ariaLabel="Questions in category"
+                items={visibleQuestions.map((question) => ({
+                  id: question.id,
+                  title: question.title,
+                  difficulty: question.difficulty,
+                  subtitle: `${question.answers.length} answers`,
+                  trailing: (
+                    <QuestionCompletionCheckbox
+                      questionId={question.id}
+                      isCompleted={completedIds.has(question.id)}
+                      onCompletionChange={handleCompletionChange}
+                    />
+                  ),
+                }))}
+                selectedId={selectedQuestionId}
+                onSelect={setSelectedQuestionId}
+                emptyMessage={
+                  filteredQuestions.length === 0
+                    ? "No questions match the current filter."
+                    : "No incomplete questions match the current filter. Check Show completed to review finished items."
+                }
               />
-            ))}
-          </div>
-        )}
+            }
+          >
+            {selectedQuestion ? (
+              <div className="space-y-4 p-4 sm:p-6">
+                <div className="flex justify-end">
+                  <QuestionCompletionCheckbox
+                    questionId={selectedQuestion.id}
+                    isCompleted={completedIds.has(selectedQuestion.id)}
+                    onCompletionChange={handleCompletionChange}
+                  />
+                </div>
+                <QuestionDetailPanel
+                  question={selectedQuestion}
+                  showCategory={false}
+                  titleAs="h1"
+                />
+                <Link
+                  href={`/questions/${selectedQuestion.id}`}
+                  className="inline-block text-sm text-primary hover:underline"
+                >
+                  Open full page →
+                </Link>
+              </div>
+            ) : (
+              <EmptyDetail message="Select a question from the list." />
+            )}
+          </SidebarDetailLayout>
         </TabsContent>
       ) : null}
 
       {hasChallenges ? (
         <TabsContent value="challenges" className="mt-0">
-        {filteredChallenges.length === 0 ? (
-          <p className="text-muted-foreground">
-            No challenges match the current filter.
-          </p>
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredChallenges.map((challenge) => (
-              <Link key={challenge.id} href={`/challenges/${challenge.id}`}>
-                <Card className="h-full transition-shadow hover:shadow-md">
-                  <CardHeader>
-                    <div className="flex items-center gap-2">
-                      <DifficultyBadge difficulty={challenge.difficulty} />
-                      <Badge variant="outline">Coding</Badge>
-                    </div>
-                    <CardTitle className="text-lg">{challenge.title}</CardTitle>
-                    <CardDescription className="line-clamp-2">
-                      {challenge.description}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="text-xs text-muted-foreground">
-                    Open challenge →
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
-        )}
+          <SidebarDetailLayout
+            sidebar={
+              <ContentSidebar
+                ariaLabel="Challenges in category"
+                items={filteredChallenges.map((challenge) => ({
+                  id: challenge.id,
+                  title: challenge.title,
+                  difficulty: challenge.difficulty,
+                  subtitle: "Coding challenge",
+                }))}
+                selectedId={selectedChallengeId}
+                onSelect={setSelectedChallengeId}
+                emptyMessage="No challenges match the current filter."
+              />
+            }
+          >
+            {selectedChallengeWithCategory ? (
+              <>
+                <ChallengeDetailPanel challenge={selectedChallengeWithCategory} />
+                <div className="border-t px-4 pb-4 sm:px-6">
+                  <Link
+                    href={`/challenges/${selectedChallengeWithCategory.id}`}
+                    className="inline-block text-sm text-primary hover:underline"
+                  >
+                    Open full page →
+                  </Link>
+                </div>
+              </>
+            ) : (
+              <EmptyDetail message="Select a challenge from the list." />
+            )}
+          </SidebarDetailLayout>
         </TabsContent>
       ) : null}
 
       {hasQuizzes ? (
         <TabsContent value="quizzes" className="mt-0">
-        {filteredQuizQuestions.length === 0 ? (
-          <p className="text-muted-foreground">
-            {quizQuestions.length === 0
-              ? "No quiz questions are available in this category yet."
-              : "No quiz questions match the current filter."}
-          </p>
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredQuizQuestions.map((question) => (
-              <QuizQuestionCard
-                key={question.id}
-                question={question}
-                showCategory={false}
+          <SidebarDetailLayout
+            sidebar={
+              <ContentSidebar
+                ariaLabel="Quiz questions in category"
+                items={filteredQuizQuestions.map((question) => ({
+                  id: question.id,
+                  title: question.title,
+                  difficulty: question.difficulty,
+                  subtitle: `${question.answers.length} options`,
+                }))}
+                selectedId={selectedQuizId}
+                onSelect={setSelectedQuizId}
+                emptyMessage={
+                  quizQuestions.length === 0
+                    ? "No quiz questions are available in this category yet."
+                    : "No quiz questions match the current filter."
+                }
               />
-            ))}
-          </div>
-        )}
+            }
+          >
+            {selectedQuizQuestion ? (
+              <div className="p-4 sm:p-6">
+                <QuizQuestionPlayer
+                  question={selectedQuizQuestion}
+                  showBackLink={false}
+                />
+                <Link
+                  href={`/quiz/${selectedQuizQuestion.id}`}
+                  className="mt-4 inline-block text-sm text-primary hover:underline"
+                >
+                  Open full page →
+                </Link>
+              </div>
+            ) : (
+              <EmptyDetail message="Select a quiz question from the list." />
+            )}
+          </SidebarDetailLayout>
         </TabsContent>
       ) : null}
     </Tabs>

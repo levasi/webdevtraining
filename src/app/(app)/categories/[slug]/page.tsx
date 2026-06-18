@@ -40,7 +40,13 @@ export default async function CategoryDetailPage({ params }: PageProps) {
       </div>
 
       <CategoryContent
-        category={category}
+        category={{
+          id: category.id,
+          name: category.name,
+          slug: category.slug,
+          questions: category.questions,
+          challenges: category.challenges,
+        }}
         completedQuestionIds={completedQuestionIds}
       />
     </div>

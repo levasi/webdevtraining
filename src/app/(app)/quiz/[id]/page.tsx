@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 
-import { QuizQuestionPlayer } from "@/components/quiz/quiz-question-player";
-import { getQuestionById } from "@/lib/queries/content";
-import { isQuizEligibleQuestion } from "@/lib/questions/quiz-eligible";
+import { QuizSidebarLayout } from "@/components/quiz/quiz-sidebar-layout";
+import { getPublishedQuestions, getQuestionById } from "@/lib/queries/content";
+import { filterQuizEligibleQuestions } from "@/lib/questions/quiz-eligible";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -18,13 +18,22 @@ export default async function QuizQuestionPage({ params }: PageProps) {
   const { id } = await params;
   const question = await getQuestionById(id);
 
-  if (!question || !isQuizEligibleQuestion(question)) {
+  if (!question) {
+    notFound();
+  }
+
+  const categoryQuestions = await getPublishedQuestions({
+    categorySlug: question.category.slug,
+  });
+  const siblings = filterQuizEligibleQuestions(categoryQuestions);
+
+  if (!siblings.some((item) => item.id === question.id)) {
     notFound();
   }
 
   return (
     <div className="w-full px-4 py-8 sm:px-6">
-      <QuizQuestionPlayer question={question} />
+      <QuizSidebarLayout question={question} items={siblings} />
     </div>
   );
 }

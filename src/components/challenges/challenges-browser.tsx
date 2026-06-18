@@ -1,0 +1,52 @@
+"use client";
+
+import { useMemo, useState } from "react";
+
+import { ChallengeDetailPanel } from "@/components/challenges/challenge-detail-panel";
+import { ContentSidebar } from "@/components/layout/content-sidebar";
+import { SidebarDetailLayout } from "@/components/layout/sidebar-detail-layout";
+import type { ChallengeWithCategory } from "@/types";
+
+type ChallengesBrowserProps = {
+  challenges: ChallengeWithCategory[];
+};
+
+export function ChallengesBrowser({ challenges }: ChallengesBrowserProps) {
+  const [selectedId, setSelectedId] = useState(challenges[0]?.id ?? null);
+  const selectedChallenge = useMemo(
+    () => challenges.find((challenge) => challenge.id === selectedId),
+    [challenges, selectedId],
+  );
+
+  if (challenges.length === 0) {
+    return (
+      <p className="text-muted-foreground">No coding challenges are available yet.</p>
+    );
+  }
+
+  return (
+    <SidebarDetailLayout
+      sidebar={
+        <ContentSidebar
+          ariaLabel="Coding challenges"
+          selectedId={selectedId}
+          onSelect={setSelectedId}
+          items={challenges.map((challenge) => ({
+            id: challenge.id,
+            title: challenge.title,
+            difficulty: challenge.difficulty,
+            subtitle: challenge.category.name,
+          }))}
+        />
+      }
+    >
+      {selectedChallenge ? (
+        <ChallengeDetailPanel challenge={selectedChallenge} />
+      ) : (
+        <div className="flex h-full min-h-48 items-center justify-center p-6 text-sm text-muted-foreground">
+          Select a challenge from the list.
+        </div>
+      )}
+    </SidebarDetailLayout>
+  );
+}

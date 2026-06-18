@@ -14,9 +14,13 @@ const difficultyVariant = {
 
 type QuizQuestionPlayerProps = {
   question: QuestionWithAnswers;
+  showBackLink?: boolean;
 };
 
-export function QuizQuestionPlayer({ question }: QuizQuestionPlayerProps) {
+export function QuizQuestionPlayer({
+  question,
+  showBackLink = true,
+}: QuizQuestionPlayerProps) {
   const allowMultiple =
     question.type === "MULTIPLE_CHOICE" &&
     question.answers.filter((answer) => answer.isCorrect).length > 1;
@@ -53,12 +57,14 @@ export function QuizQuestionPlayer({ question }: QuizQuestionPlayerProps) {
         />
       </div>
 
-      <ButtonLink
-        href={`/categories/${question.category.slug}`}
-        variant="outline"
-      >
-        Back to {question.category.name}
-      </ButtonLink>
+      {showBackLink ? (
+        <ButtonLink
+          href={`/categories/${question.category.slug}`}
+          variant="outline"
+        >
+          Back to {question.category.name}
+        </ButtonLink>
+      ) : null}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { QuizQuestionCard } from "@/components/quiz/quiz-question-card";
+import { QuizBrowser } from "@/components/quiz/quiz-browser";
 import { getPublishedQuestions } from "@/lib/queries/content";
 import { filterQuizEligibleQuestions } from "@/lib/questions/quiz-eligible";
 
@@ -18,17 +18,9 @@ export default async function QuizPage() {
         result with explanations.
       </p>
 
-      {quizQuestions.length === 0 ? (
-        <p className="mt-8 text-muted-foreground">
-          No quiz questions are available yet.
-        </p>
-      ) : (
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {quizQuestions.map((question) => (
-            <QuizQuestionCard key={question.id} question={question} />
-          ))}
-        </div>
-      )}
+      <div className="mt-8">
+        <QuizBrowser questions={quizQuestions} />
+      </div>
     </div>
   );
 }

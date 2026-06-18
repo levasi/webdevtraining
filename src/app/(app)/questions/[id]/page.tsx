@@ -1,10 +1,10 @@
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 
-import { QuestionDetailClient } from "@/components/questions/question-detail-client";
+import { QuestionSidebarLayout } from "@/components/questions/question-sidebar-layout";
 import { auth } from "@/lib/auth";
-import { getQuestionById } from "@/lib/queries/content";
-import { isQuestionCompleted } from "@/lib/queries/progress";
+import { getPublishedQuestions, getQuestionById } from "@/lib/queries/content";
+import { getCompletedQuestionIds } from "@/lib/queries/progress";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -18,17 +18,23 @@ export default async function QuestionDetailPage({ params }: PageProps) {
     notFound();
   }
 
+  const siblings = await getPublishedQuestions({
+    categorySlug: question.category.slug,
+  });
   const session = await auth.api.getSession({ headers: await headers() });
-  const isCompleted = session?.user
-    ? await isQuestionCompleted(session.user.id, question.id)
-    : false;
+  const completedQuestionIds = session?.user
+    ? await getCompletedQuestionIds(session.user.id)
+    : [];
+  const isCompleted = completedQuestionIds.includes(question.id);
 
   return (
-    <QuestionDetailClient
-      question={question}
-      categorySlug={question.category.slug}
-      categoryName={question.category.name}
-      isCompleted={isCompleted}
-    />
+    <div className="w-full px-4 py-8 sm:px-6">
+      <QuestionSidebarLayout
+        question={question}
+        items={siblings}
+        isCompleted={isCompleted}
+        completedQuestionIds={completedQuestionIds}
+      />
+    </div>
   );
 }
