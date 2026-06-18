@@ -2,11 +2,9 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 
 import { db } from "@/lib/db";
+import { getAppUrl } from "@/lib/app-url";
 
-const appUrl =
-  process.env.BETTER_AUTH_URL ??
-  process.env.NEXT_PUBLIC_APP_URL ??
-  "http://localhost:3000";
+const appUrl = getAppUrl();
 
 export const auth = betterAuth({
   secret:
