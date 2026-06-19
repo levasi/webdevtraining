@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { BookOpen, LayoutDashboard, Library, Menu } from "lucide-react";
 
+import { AddQuestionDialog } from "@/components/layout/add-question-dialog";
+import { CategoriesNavFlyout } from "@/components/layout/categories-nav-flyout";
 import { ButtonLink } from "@/components/ui/button-link";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { signOut, useSession } from "@/lib/auth-client";
 import { navigateTo } from "@/lib/navigation";
+import { getGoogleAvatarUrl } from "@/lib/user-avatar";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -28,6 +31,7 @@ const navItems = [
 function HeaderAuthActions() {
   const { data: session, isPending } = useSession();
   const user = session?.user;
+  const isAdmin = user?.role === "ADMIN";
 
   if (isPending) {
     return <Skeleton className="size-8 rounded-full" />;
@@ -47,6 +51,7 @@ function HeaderAuthActions() {
   }
 
   const displayName = user.name || user.email?.split("@")[0] || "Account";
+  const avatarUrl = getGoogleAvatarUrl(user.image);
   const initials = displayName
     .split(" ")
     .map((part) => part[0])
@@ -60,32 +65,39 @@ function HeaderAuthActions() {
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            className="rounded-full p-0"
-            aria-label={`${displayName} account menu`}
-          />
-        }
-      >
-        <Avatar size="sm">
-          {user.image ? (
-            <AvatarImage src={user.image} alt={displayName} />
-          ) : null}
-          <AvatarFallback>{initials}</AvatarFallback>
-        </Avatar>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-44">
-        <DropdownMenuItem render={<Link href="/admin" />}>Admin</DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem variant="destructive" onClick={handleSignOut}>
-          Sign out
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <>
+      {isAdmin ? <AddQuestionDialog /> : null}
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              className="rounded-full p-0"
+              aria-label={`${displayName} account menu`}
+            />
+          }
+        >
+          <Avatar size="sm">
+            {avatarUrl ? (
+              <AvatarImage
+                src={avatarUrl}
+                alt={displayName}
+                referrerPolicy="no-referrer"
+              />
+            ) : null}
+            <AvatarFallback>{initials}</AvatarFallback>
+          </Avatar>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-44">
+          <DropdownMenuItem render={<Link href="/admin" />}>Admin</DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem variant="destructive" onClick={handleSignOut}>
+            Sign out
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </>
   );
 }
 
@@ -117,16 +129,19 @@ export function AppHeader({ onMenuClick }: AppHeaderProps) {
         </div>
 
         <nav className="hidden items-center gap-1 md:flex">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              prefetch={false}
-              className="rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            >
-              {item.label}
-            </Link>
-          ))}
+          <CategoriesNavFlyout />
+          {navItems
+            .filter((item) => item.href !== "/categories")
+            .map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                prefetch={false}
+                className="rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                {item.label}
+              </Link>
+            ))}
         </nav>
 
         <div className="flex items-center gap-2">
@@ -143,6 +158,9 @@ type MobileNavProps = {
 };
 
 export function MobileNav({ open, onClose }: MobileNavProps) {
+  const { data: session } = useSession();
+  const isAdmin = session?.user?.role === "ADMIN";
+
   return (
     <div
       className={cn(
@@ -176,6 +194,11 @@ export function MobileNav({ open, onClose }: MobileNavProps) {
               {item.label}
             </Link>
           ))}
+          {isAdmin ? (
+            <div className="mt-2 border-t pt-3">
+              <AddQuestionDialog />
+            </div>
+          ) : null}
         </div>
       </nav>
     </div>

@@ -27,6 +27,10 @@ export const auth = betterAuth({
             clientSecret: googleClientSecret,
             redirectURI: `${appUrl}/api/auth/google/callback`,
             prompt: "select_account",
+            overrideUserInfoOnSignIn: true,
+            mapProfileToUser: (profile) => ({
+              image: profile.picture,
+            }),
           },
         }
       : {}),
@@ -37,6 +41,7 @@ export const auth = betterAuth({
       trustedProviders: ["google"],
       // Allow linking when an older email/password user has emailVerified: false
       requireLocalEmailVerified: false,
+      updateUserInfoOnLink: true,
     },
   },
   user: {

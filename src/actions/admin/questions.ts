@@ -30,6 +30,25 @@ async function requireAdmin() {
   return session.user;
 }
 
+export async function getQuestionFormCategories(): Promise<
+  ActionResult<Array<{ id: string; name: string }>>
+> {
+  try {
+    await requireAdmin();
+
+    const categories = await db.category.findMany({
+      orderBy: { sortOrder: "asc" },
+      select: { id: true, name: true },
+    });
+
+    return { success: true, data: categories };
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Failed to load categories";
+    return { success: false, error: message };
+  }
+}
+
 export async function createQuestion(
   input: unknown,
 ): Promise<ActionResult<{ id: string }>> {

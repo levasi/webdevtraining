@@ -30,6 +30,8 @@ type CategoryOption = {
 
 type CreateQuestionFormProps = {
   categories: CategoryOption[];
+  onSuccess?: () => void;
+  onCancel?: () => void;
 };
 
 const difficultyOptions = [
@@ -50,7 +52,11 @@ const defaultAnswers: AnswerField[] = [
   { content: "", isCorrect: false },
 ];
 
-export function CreateQuestionForm({ categories }: CreateQuestionFormProps) {
+export function CreateQuestionForm({
+  categories,
+  onSuccess,
+  onCancel,
+}: CreateQuestionFormProps) {
   const [categoryId, setCategoryId] = useState(categories[0]?.id ?? "");
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -136,6 +142,11 @@ export function CreateQuestionForm({ categories }: CreateQuestionFormProps) {
 
     if (!result.success) {
       setError(result.error);
+      return;
+    }
+
+    if (onSuccess) {
+      onSuccess();
       return;
     }
 
@@ -343,7 +354,9 @@ export function CreateQuestionForm({ categories }: CreateQuestionFormProps) {
         <Button
           type="button"
           variant="outline"
-          onClick={() => navigateTo("/admin/questions")}
+          onClick={() =>
+            onCancel ? onCancel() : navigateTo("/admin/questions")
+          }
         >
           Cancel
         </Button>
