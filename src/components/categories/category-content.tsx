@@ -115,8 +115,13 @@ export function CategoryContent({
   category,
   completedQuestionIds = [],
 }: CategoryContentProps) {
+  const [categoryState, setCategoryState] = useState(category);
+
+  useEffect(() => {
+    setCategoryState(category);
+  }, [category]);
   const [activeTab, setActiveTab] = useState<CategoryTab>(() =>
-    getFirstAvailableTab(category),
+    getFirstAvailableTab(categoryState),
   );
   const [difficultyFilter, setDifficultyFilter] =
     useState<DifficultyFilter>("ALL");
@@ -127,12 +132,12 @@ export function CategoryContent({
   );
 
   const quizQuestions = useMemo(
-    () => filterQuizEligibleQuestions(category.questions),
-    [category.questions],
+    () => filterQuizEligibleQuestions(categoryState.questions),
+    [categoryState.questions],
   );
 
-  const hasQuestions = category.questions.length > 0;
-  const hasChallenges = category.challenges.length > 0;
+  const hasQuestions = categoryState.questions.length > 0;
+  const hasChallenges = categoryState.challenges.length > 0;
   const hasQuizzes = quizQuestions.length > 0;
 
   const availableTabs = useMemo(() => {
@@ -160,9 +165,9 @@ export function CategoryContent({
   }, [activeTab, availableTabs]);
 
   const filteredQuestions = useMemo(() => {
-    const items = filterByDifficulty(category.questions, difficultyFilter);
+    const items = filterByDifficulty(categoryState.questions, difficultyFilter);
     return sortCategoryItems(items, sort);
-  }, [category.questions, difficultyFilter, sort]);
+  }, [categoryState.questions, difficultyFilter, sort]);
 
   const visibleQuestions = useMemo(() => {
     if (showCompleted) {
@@ -173,9 +178,9 @@ export function CategoryContent({
   }, [filteredQuestions, showCompleted, completedIds]);
 
   const filteredChallenges = useMemo(() => {
-    const items = filterByDifficulty(category.challenges, difficultyFilter);
+    const items = filterByDifficulty(categoryState.challenges, difficultyFilter);
     return sortCategoryItems(items, sort);
-  }, [category.challenges, difficultyFilter, sort]);
+  }, [categoryState.challenges, difficultyFilter, sort]);
 
   const filteredQuizQuestions = useMemo(() => {
     const items = filterByDifficulty(quizQuestions, difficultyFilter);
@@ -199,15 +204,24 @@ export function CategoryContent({
     ? {
       ...selectedChallenge,
       category: {
-        id: category.id,
-        name: category.name,
-        slug: category.slug,
+        id: categoryState.id,
+        name: categoryState.name,
+        slug: categoryState.slug,
       },
     }
     : null;
   const selectedQuizQuestion = filteredQuizQuestions.find(
     (question) => question.id === selectedQuizId,
   );
+
+  function handleQuestionChange(updatedQuestion: CategoryQuestion) {
+    setCategoryState((current) => ({
+      ...current,
+      questions: current.questions.map((question) =>
+        question.id === updatedQuestion.id ? updatedQuestion : question,
+      ),
+    }));
+  }
 
   function handleCompletionChange(questionId: string, completed: boolean) {
     setCompletedIds((current) => {
@@ -343,6 +357,7 @@ export function CategoryContent({
                   question={selectedQuestion}
                   showCategory={false}
                   titleAs="h1"
+                  onQuestionChange={handleQuestionChange}
                 />
                 <Link
                   href={`/questions/${selectedQuestion.id}`}

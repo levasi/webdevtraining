@@ -74,6 +74,19 @@ export const createQuestionSchema = z
     }
   });
 
+export const updateQuestionSchema = z.object({
+  questionId: z.string().min(1),
+  title: z.string().min(3).max(200),
+  answers: z
+    .array(
+      z.object({
+        id: z.string().min(1),
+        content: z.string().min(1),
+      }),
+    )
+    .min(1),
+});
+
 export const createChallengeSchema = z.object({
   categoryId: z.string().min(1),
   title: z.string().min(3).max(200),
@@ -107,4 +120,5 @@ export const noteSchema = z.object({
 });
 
 export type CreateQuestionInput = z.infer<typeof createQuestionSchema>;
+export type UpdateQuestionInput = z.infer<typeof updateQuestionSchema>;
 export type CreateChallengeInput = z.infer<typeof createChallengeSchema>;

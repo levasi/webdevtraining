@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { normalizeQuestionText } from "@/lib/questions/dedup";
-import { createQuestionSchema } from "@/lib/validators/content";
+import { createQuestionSchema, updateQuestionSchema } from "@/lib/validators/content";
 import type { ActionResult } from "@/types";
 
 async function requireAdmin() {
@@ -103,6 +103,85 @@ export async function createQuestion(
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Failed to create question";
+    return { success: false, error: message };
+  }
+}
+
+export async function updateQuestion(
+  input: unknown,
+): Promise<ActionResult<{ id: string }>> {
+  try {
+    await requireAdmin();
+    const data = updateQuestionSchema.parse(input);
+
+    const existing = await db.question.findUnique({
+      where: { id: data.questionId },
+      select: {
+        id: true,
+        categoryId: true,
+        category: { select: { slug: true } },
+      },
+    });
+
+    if (!existing) {
+      return { success: false, error: "Question not found." };
+    }
+
+    const normalizedTitle = normalizeQuestionText(data.title);
+
+    const categoryQuestions = await db.question.findMany({
+      where: { categoryId: existing.categoryId },
+      select: { id: true, title: true },
+    });
+
+    const duplicate = categoryQuestions.find(
+      (question) =>
+        question.id !== data.questionId &&
+        normalizeQuestionText(question.title) === normalizedTitle,
+    );
+
+    if (duplicate) {
+      return {
+        success: false,
+        error: `Another question in this category already uses the title "${duplicate.title}".`,
+      };
+    }
+
+    const answerIds = data.answers.map((answer) => answer.id);
+    const existingAnswers = await db.answer.findMany({
+      where: { questionId: data.questionId },
+      select: { id: true },
+    });
+
+    if (
+      existingAnswers.length !== answerIds.length ||
+      !existingAnswers.every((answer) => answerIds.includes(answer.id))
+    ) {
+      return { success: false, error: "Answer list does not match this question." };
+    }
+
+    await db.$transaction([
+      db.question.update({
+        where: { id: data.questionId },
+        data: { title: data.title },
+      }),
+      ...data.answers.map((answer) =>
+        db.answer.update({
+          where: { id: answer.id },
+          data: { content: answer.content },
+        }),
+      ),
+    ]);
+
+    revalidatePath("/admin/questions");
+    revalidatePath("/categories");
+    revalidatePath(`/categories/${existing.category.slug}`);
+    revalidatePath(`/questions/${data.questionId}`);
+
+    return { success: true, data: { id: data.questionId } };
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Failed to update question";
     return { success: false, error: message };
   }
 }
