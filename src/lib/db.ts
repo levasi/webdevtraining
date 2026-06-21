@@ -2,6 +2,9 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
 
 import { PrismaClient } from "@/generated/prisma/client";
+import { createDevTtlCache } from "@/lib/dev-cache";
+
+const dbAvailabilityCache = createDevTtlCache<boolean>(60_000);
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -46,6 +49,7 @@ function createPrismaClient() {
     globalForPrisma.pool ??
     new Pool({
       connectionString,
+      max: process.env.NODE_ENV === "development" ? 3 : undefined,
     });
 
   if (!globalForPrisma.pool) {
@@ -85,14 +89,22 @@ export const db = new Proxy({} as PrismaClient, {
 });
 
 export async function isDatabaseAvailable(): Promise<boolean> {
+  const cached = dbAvailabilityCache.get();
+  if (cached !== null) {
+    return cached;
+  }
+
   if (!hasDatabaseUrl()) {
+    dbAvailabilityCache.set(false);
     return false;
   }
 
   try {
     await db.$queryRaw`SELECT 1`;
+    dbAvailabilityCache.set(true);
     return true;
   } catch {
+    dbAvailabilityCache.set(false);
     return false;
   }
 }

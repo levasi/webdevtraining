@@ -1,6 +1,7 @@
 import type {
   Category,
   Challenge,
+  Article,
   Difficulty,
   Question,
   Answer,
@@ -8,6 +9,10 @@ import type {
 
 export type QuestionWithAnswers = Question & {
   answers: Answer[];
+  category: Pick<Category, "id" | "name" | "slug">;
+};
+
+export type ArticleWithCategory = Article & {
   category: Pick<Category, "id" | "name" | "slug">;
 };
 
@@ -34,6 +39,7 @@ export type CategorySummary = Pick<
   _count: {
     questions: number;
     challenges: number;
+    articles: number;
   };
 };
 

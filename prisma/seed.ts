@@ -4,6 +4,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
 
 import { CATEGORIES } from "../src/lib/constants";
+import { ALL_ARTICLES } from "./data/articles";
 import { ALL_CHALLENGES } from "./data/challenges";
 import { ALL_SEED_QUESTIONS } from "./data";
 import { PrismaClient } from "../src/generated/prisma/client";
@@ -291,6 +292,46 @@ async function seedQuizzes() {
   }
 }
 
+async function seedArticles() {
+  const categories = await prisma.category.findMany();
+  const categoryBySlug = new Map(categories.map((c) => [c.slug, c.id]));
+
+  for (const article of ALL_ARTICLES) {
+    const categoryId = categoryBySlug.get(article.categorySlug);
+    if (!categoryId) {
+      console.warn(`Skipping ${article.id}: unknown category ${article.categorySlug}`);
+      continue;
+    }
+
+    await prisma.article.upsert({
+      where: { id: article.id },
+      update: {
+        categoryId,
+        title: article.title,
+        slug: article.slug,
+        excerpt: article.excerpt,
+        content: article.content,
+        difficulty: article.difficulty,
+        tags: article.tags,
+        sortOrder: article.sortOrder ?? 0,
+        isPublished: true,
+      },
+      create: {
+        id: article.id,
+        categoryId,
+        title: article.title,
+        slug: article.slug,
+        excerpt: article.excerpt,
+        content: article.content,
+        difficulty: article.difficulty,
+        tags: article.tags,
+        sortOrder: article.sortOrder ?? 0,
+        isPublished: true,
+      },
+    });
+  }
+}
+
 async function seedSiteSettings() {
   await prisma.siteSettings.upsert({
     where: { id: "singleton" },
@@ -306,6 +347,7 @@ async function main() {
   await seedQuestions();
   await seedChallenges();
   await seedQuizzes();
+  await seedArticles();
   await seedSiteSettings();
 
   const counts = await prisma.question.groupBy({
@@ -315,6 +357,7 @@ async function main() {
 
   console.log(`Seeded ${ALL_SEED_QUESTIONS.length} questions across ${counts.length} categories.`);
   console.log(`Seeded ${ALL_CHALLENGES.length} coding challenges.`);
+  console.log(`Seeded ${ALL_ARTICLES.length} articles.`);
   console.log("Seed completed.");
 }
 

@@ -6,6 +6,7 @@ import { z } from "zod";
 import { requireAdmin } from "@/lib/admin/require-admin";
 import { db } from "@/lib/db";
 import { isMainFontKey } from "@/lib/fonts";
+import { clearMainFontCache } from "@/lib/site-settings";
 import type { ActionResult } from "@/types";
 
 const updateMainFontSchema = z.object({
@@ -30,6 +31,7 @@ export async function updateMainFont(
     });
 
     revalidatePath("/", "layout");
+    clearMainFontCache();
 
     return { success: true, data: { mainFont } };
   } catch (error) {

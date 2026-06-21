@@ -32,7 +32,7 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
             </CardHeader>
             <CardContent className="text-sm text-muted-foreground">
               {category._count.questions} questions · {category._count.challenges}{" "}
-              challenges
+              challenges · {category._count.articles} articles
             </CardContent>
           </Card>
         </Link>

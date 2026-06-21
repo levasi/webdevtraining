@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
+import { ArticleDetailPanel } from "@/components/articles/article-detail-panel";
 import { ChallengeDetailPanel } from "@/components/challenges/challenge-detail-panel";
 import { ContentSidebar } from "@/components/layout/content-sidebar";
 import { SidebarDetailLayout } from "@/components/layout/sidebar-detail-layout";
@@ -25,7 +26,7 @@ import {
   type CategorySortOption,
   sortCategoryItems,
 } from "@/lib/questions/sort";
-import type { Challenge, Question, Answer, Category } from "@/generated/prisma/client";
+import type { Article, Challenge, Question, Answer, Category } from "@/generated/prisma/client";
 import type { DifficultyFilter } from "@/types";
 
 type CategoryQuestion = Question & {
@@ -33,7 +34,7 @@ type CategoryQuestion = Question & {
   category: Pick<Category, "id" | "name" | "slug">;
 };
 
-type CategoryTab = "questions" | "challenges" | "quizzes";
+type CategoryTab = "questions" | "challenges" | "quizzes" | "articles";
 
 type CategoryContentProps = {
   category: {
@@ -42,6 +43,7 @@ type CategoryContentProps = {
     slug: string;
     questions: CategoryQuestion[];
     challenges: Challenge[];
+    articles: Article[];
   };
   completedQuestionIds?: string[];
 };
@@ -70,9 +72,24 @@ function filterByDifficulty<T extends { difficulty: CategoryQuestion["difficulty
   return items.filter((item) => item.difficulty === difficultyFilter);
 }
 
+function filterArticlesByDifficulty(
+  items: Article[],
+  difficultyFilter: DifficultyFilter,
+) {
+  if (difficultyFilter === "ALL") {
+    return items;
+  }
+
+  return items.filter((item) => item.difficulty === difficultyFilter);
+}
+
 function getFirstAvailableTab(category: CategoryContentProps["category"]): CategoryTab {
   if (category.questions.length > 0) {
     return "questions";
+  }
+
+  if (category.articles.length > 0) {
+    return "articles";
   }
 
   if (category.challenges.length > 0) {
@@ -139,12 +156,17 @@ export function CategoryContent({
   const hasQuestions = categoryState.questions.length > 0;
   const hasChallenges = categoryState.challenges.length > 0;
   const hasQuizzes = quizQuestions.length > 0;
+  const hasArticles = categoryState.articles.length > 0;
 
   const availableTabs = useMemo(() => {
     const tabs: CategoryTab[] = [];
 
     if (hasQuestions) {
       tabs.push("questions");
+    }
+
+    if (hasArticles) {
+      tabs.push("articles");
     }
 
     if (hasChallenges) {
@@ -156,7 +178,7 @@ export function CategoryContent({
     }
 
     return tabs;
-  }, [hasQuestions, hasChallenges, hasQuizzes]);
+  }, [hasQuestions, hasArticles, hasChallenges, hasQuizzes]);
 
   useEffect(() => {
     if (!availableTabs.includes(activeTab) && availableTabs.length > 0) {
@@ -187,12 +209,25 @@ export function CategoryContent({
     return sortCategoryItems(items, sort);
   }, [quizQuestions, difficultyFilter, sort]);
 
+  const filteredArticles = useMemo(() => {
+    const items = filterArticlesByDifficulty(categoryState.articles, difficultyFilter);
+    return sortCategoryItems(
+      items.map((article) => ({
+        ...article,
+        difficulty: article.difficulty ?? "INTERMEDIATE",
+      })),
+      sort,
+    );
+  }, [categoryState.articles, difficultyFilter, sort]);
+
   const [selectedQuestionId, setSelectedQuestionId] =
     useSyncedSelection(visibleQuestions);
   const [selectedChallengeId, setSelectedChallengeId] =
     useSyncedSelection(filteredChallenges);
   const [selectedQuizId, setSelectedQuizId] =
     useSyncedSelection(filteredQuizQuestions);
+  const [selectedArticleId, setSelectedArticleId] =
+    useSyncedSelection(filteredArticles);
 
   const selectedQuestion = visibleQuestions.find(
     (question) => question.id === selectedQuestionId,
@@ -213,6 +248,19 @@ export function CategoryContent({
   const selectedQuizQuestion = filteredQuizQuestions.find(
     (question) => question.id === selectedQuizId,
   );
+  const selectedArticle = filteredArticles.find(
+    (article) => article.id === selectedArticleId,
+  );
+  const selectedArticleWithCategory = selectedArticle
+    ? {
+      ...selectedArticle,
+      category: {
+        id: categoryState.id,
+        name: categoryState.name,
+        slug: categoryState.slug,
+      },
+    }
+    : null;
 
   function handleQuestionChange(updatedQuestion: CategoryQuestion) {
     setCategoryState((current) => ({
@@ -305,6 +353,9 @@ export function CategoryContent({
             ) : null}
             {hasChallenges ? (
               <TabsTrigger value="challenges">Challenges</TabsTrigger>
+            ) : null}
+            {hasArticles ? (
+              <TabsTrigger value="articles">Articles</TabsTrigger>
             ) : null}
             {hasQuizzes ? (
               <TabsTrigger value="quizzes">Quizzes</TabsTrigger>
@@ -447,6 +498,45 @@ export function CategoryContent({
               </div>
             ) : (
               <EmptyDetail message="Select a quiz question from the list." />
+            )}
+          </SidebarDetailLayout>
+        </TabsContent>
+      ) : null}
+
+      {hasArticles ? (
+        <TabsContent value="articles" className="mt-0">
+          <SidebarDetailLayout
+            sidebar={
+              <ContentSidebar
+                ariaLabel="Articles in category"
+                items={filteredArticles.map((article) => ({
+                  id: article.id,
+                  title: article.title,
+                  difficulty: article.difficulty ?? "INTERMEDIATE",
+                  subtitle: "Article",
+                }))}
+                selectedId={selectedArticleId}
+                onSelect={setSelectedArticleId}
+                emptyMessage="No articles match the current filter."
+              />
+            }
+          >
+            {selectedArticleWithCategory ? (
+              <div className="space-y-4 p-4 sm:p-6">
+                <ArticleDetailPanel
+                  article={selectedArticleWithCategory}
+                  showCategory={false}
+                  titleAs="h1"
+                />
+                <Link
+                  href={`/articles/${selectedArticleWithCategory.id}`}
+                  className="inline-block text-sm text-primary hover:underline"
+                >
+                  Open full page →
+                </Link>
+              </div>
+            ) : (
+              <EmptyDetail message="Select an article from the list." />
             )}
           </SidebarDetailLayout>
         </TabsContent>

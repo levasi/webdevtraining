@@ -21,3 +21,15 @@ export type SeedQuestion = {
   tags: string[];
   answers: SeedAnswer[];
 };
+
+export type SeedArticle = {
+  id: string;
+  categorySlug: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  difficulty?: SeedDifficulty;
+  tags: string[];
+  sortOrder?: number;
+};

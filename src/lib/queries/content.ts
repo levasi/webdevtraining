@@ -14,6 +14,7 @@ export async function getCategories(): Promise<CategorySummary[]> {
         select: {
           questions: { where: { isPublished: true } },
           challenges: { where: { isPublished: true } },
+          articles: { where: { isPublished: true } },
         },
       },
     },
@@ -35,6 +36,10 @@ export async function getCategoryBySlug(slug: string) {
       challenges: {
         where: { isPublished: true },
         orderBy: [{ difficulty: "asc" }, { title: "asc" }],
+      },
+      articles: {
+        where: { isPublished: true },
+        orderBy: [{ sortOrder: "asc" }, { title: "asc" }],
       },
       quizzes: {
         where: { isPublished: true },
@@ -98,6 +103,28 @@ export async function getPublishedChallenges(categorySlug?: string) {
 
 export async function getChallengeById(id: string) {
   return db.challenge.findUnique({
+    where: { id, isPublished: true },
+    include: {
+      category: { select: { id: true, name: true, slug: true } },
+    },
+  });
+}
+
+export async function getPublishedArticles(categorySlug?: string) {
+  return db.article.findMany({
+    where: {
+      isPublished: true,
+      ...(categorySlug ? { category: { slug: categorySlug } } : {}),
+    },
+    include: {
+      category: { select: { id: true, name: true, slug: true } },
+    },
+    orderBy: [{ sortOrder: "asc" }, { title: "asc" }],
+  });
+}
+
+export async function getArticleById(id: string) {
+  return db.article.findUnique({
     where: { id, isPublished: true },
     include: {
       category: { select: { id: true, name: true, slug: true } },

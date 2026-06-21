@@ -46,6 +46,7 @@ export default async function CategoryDetailPage({ params }: PageProps) {
           slug: category.slug,
           questions: category.questions,
           challenges: category.challenges,
+          articles: category.articles,
         }}
         completedQuestionIds={completedQuestionIds}
       />
