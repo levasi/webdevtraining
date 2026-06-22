@@ -1,21 +1,19 @@
-import "dotenv/config";
-
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
 
 import { CATEGORIES } from "../src/lib/constants";
+import {
+  getDirectDatabaseConnectionString,
+  loadProjectEnv,
+} from "../src/lib/database-url";
 import { ALL_ARTICLES } from "./data/articles";
 import { ALL_CHALLENGES } from "./data/challenges";
 import { ALL_SEED_QUESTIONS } from "./data";
 import { PrismaClient } from "../src/generated/prisma/client";
 import type { Prisma } from "../src/generated/prisma/client";
 
-const connectionString =
-  process.env.DIRECT_DATABASE_URL ?? process.env.DATABASE_URL;
-
-if (!connectionString) {
-  throw new Error("Set DIRECT_DATABASE_URL or DATABASE_URL before seeding.");
-}
+loadProjectEnv();
+const connectionString = getDirectDatabaseConnectionString();
 
 const pool = new Pool({ connectionString });
 const adapter = new PrismaPg(pool);

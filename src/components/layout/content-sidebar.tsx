@@ -40,7 +40,7 @@ export function ContentSidebar({
   return (
     <nav
       aria-label={ariaLabel}
-      className="flex-1 overflow-y-auto p-2"
+      className="min-h-0 flex-1 overflow-y-auto p-2"
     >
       <ul className="space-y-1">
         {items.map((item) => {

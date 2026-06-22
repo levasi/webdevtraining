@@ -1,4 +1,5 @@
 import { javascriptQuestions } from "./javascript";
+import { javascriptInterviewbitQuestions } from "./javascript-interviewbit";
 import { typescriptQuestions, reactQuestions } from "./typescript-react";
 import {
   nextjsQuestions,
@@ -26,6 +27,7 @@ import type { SeedQuestion } from "./types";
 
 export const ALL_SEED_QUESTIONS: SeedQuestion[] = [
   ...javascriptQuestions,
+  ...javascriptInterviewbitQuestions,
   ...typescriptQuestions,
   ...reactQuestions,
   ...nextjsQuestions,

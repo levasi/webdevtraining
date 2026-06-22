@@ -3,47 +3,39 @@ import { Pool } from "pg";
 
 import { PrismaClient } from "@/generated/prisma/client";
 import { createDevTtlCache } from "@/lib/dev-cache";
+import {
+  getRuntimeDatabaseConnectionString,
+  hasDatabaseConnectionString,
+} from "@/lib/database-url";
 
 const dbAvailabilityCache = createDevTtlCache<boolean>(60_000);
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
   pool: Pool | undefined;
+  connectionString: string | undefined;
 };
 
 export function hasDatabaseUrl(): boolean {
-  return Boolean(process.env.DIRECT_DATABASE_URL ?? process.env.DATABASE_URL);
+  return hasDatabaseConnectionString();
 }
 
-function getDatabaseUrl(): string {
-  const directUrl = process.env.DIRECT_DATABASE_URL;
-  if (directUrl) {
-    return directUrl;
-  }
+function resetPrismaClient(): void {
+  void globalForPrisma.pool?.end().catch(() => undefined);
+  globalForPrisma.pool = undefined;
+  globalForPrisma.prisma = undefined;
+  globalForPrisma.connectionString = undefined;
+}
 
-  const databaseUrl = process.env.DATABASE_URL;
-  if (!databaseUrl) {
-    throw new Error("DATABASE_URL is not configured.");
-  }
+function createPrismaClient(): PrismaClient {
+  const connectionString = getRuntimeDatabaseConnectionString();
 
   if (
-    databaseUrl.startsWith("postgresql://") ||
-    databaseUrl.startsWith("postgres://")
+    globalForPrisma.connectionString &&
+    globalForPrisma.connectionString !== connectionString
   ) {
-    return databaseUrl;
+    resetPrismaClient();
   }
-
-  if (databaseUrl.startsWith("prisma+postgres://")) {
-    throw new Error(
-      "DATABASE_URL uses prisma+postgres:// but DIRECT_DATABASE_URL is missing. Run `npx prisma dev`, copy the printed postgres:// URL into DIRECT_DATABASE_URL, then restart the app.",
-    );
-  }
-
-  return databaseUrl;
-}
-
-function createPrismaClient() {
-  const connectionString = getDatabaseUrl();
 
   const pool =
     globalForPrisma.pool ??
@@ -52,9 +44,8 @@ function createPrismaClient() {
       max: process.env.NODE_ENV === "development" ? 3 : undefined,
     });
 
-  if (!globalForPrisma.pool) {
-    globalForPrisma.pool = pool;
-  }
+  globalForPrisma.pool = pool;
+  globalForPrisma.connectionString = connectionString;
 
   const adapter = new PrismaPg(pool);
 
@@ -104,7 +95,8 @@ export async function isDatabaseAvailable(): Promise<boolean> {
     dbAvailabilityCache.set(true);
     return true;
   } catch {
-    dbAvailabilityCache.set(false);
+    resetPrismaClient();
+    dbAvailabilityCache.clear();
     return false;
   }
 }
