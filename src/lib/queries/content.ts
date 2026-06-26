@@ -1,7 +1,12 @@
+import { unstable_cache } from "next/cache";
+import { cache } from "react";
+
 import { db } from "@/lib/db";
 import type { CategorySummary, QuestionWithAnswers } from "@/types";
 
-export async function getCategories(): Promise<CategorySummary[]> {
+const CATEGORY_REVALIDATE_SECONDS = 300;
+
+async function fetchCategories(): Promise<CategorySummary[]> {
   return db.category.findMany({
     orderBy: { sortOrder: "asc" },
     select: {
@@ -21,7 +26,7 @@ export async function getCategories(): Promise<CategorySummary[]> {
   });
 }
 
-export async function getCategoryBySlug(slug: string) {
+async function fetchCategoryBySlug(slug: string) {
   return db.category.findUnique({
     where: { slug },
     include: {
@@ -41,16 +46,27 @@ export async function getCategoryBySlug(slug: string) {
         where: { isPublished: true },
         orderBy: [{ sortOrder: "asc" }, { title: "asc" }],
       },
-      quizzes: {
-        where: { isPublished: true },
-        include: {
-          _count: { select: { questions: true } },
-        },
-        orderBy: [{ title: "asc" }],
-      },
     },
   });
 }
+
+export const getCategories = cache(async (): Promise<CategorySummary[]> =>
+  unstable_cache(fetchCategories, ["categories-list"], {
+    revalidate: CATEGORY_REVALIDATE_SECONDS,
+    tags: ["categories"],
+  })(),
+);
+
+export const getCategoryBySlug = cache(async (slug: string) =>
+  unstable_cache(
+    () => fetchCategoryBySlug(slug),
+    ["category-by-slug", slug],
+    {
+      revalidate: CATEGORY_REVALIDATE_SECONDS,
+      tags: ["categories", `category-${slug}`],
+    },
+  )(),
+);
 
 export async function getPublishedQuestions(filters?: {
   categorySlug?: string;

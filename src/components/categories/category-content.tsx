@@ -8,9 +8,11 @@ import { ChallengeDetailPanel } from "@/components/challenges/challenge-detail-p
 import { ContentSidebar } from "@/components/layout/content-sidebar";
 import { SidebarDetailLayout } from "@/components/layout/sidebar-detail-layout";
 import { QuestionCompletionCheckbox } from "@/components/questions/question-completion-checkbox";
+import { MobileQuestionFeed } from "@/components/questions/mobile-question-feed";
 import { QuestionDetailPanel } from "@/components/questions/question-detail-panel";
 import { QuizQuestionPlayer } from "@/components/quiz/quiz-question-player";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -21,6 +23,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DIFFICULTY_LABELS } from "@/lib/constants";
 import { filterQuizEligibleQuestions } from "@/lib/questions/quiz-eligible";
+import { getSearchTerms } from "@/lib/search-highlight";
+import { useDebouncedValue } from "@/lib/use-debounced-value";
 import {
   CATEGORY_SORT_LABELS,
   type CategorySortOption,
@@ -83,6 +87,29 @@ function filterArticlesByDifficulty(
   return items.filter((item) => item.difficulty === difficultyFilter);
 }
 
+function questionMatchesSearch(
+  question: CategoryQuestion,
+  query: string,
+): boolean {
+  const terms = getSearchTerms(query);
+  if (terms.length === 0) {
+    return true;
+  }
+
+  const haystack = [
+    question.title,
+    question.content,
+    question.explanation,
+    ...question.tags,
+    ...question.answers.map((answer) => answer.content),
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  return terms.every((term) => haystack.includes(term));
+}
+
 function getFirstAvailableTab(category: CategoryContentProps["category"]): CategoryTab {
   if (category.questions.length > 0) {
     return "questions";
@@ -137,12 +164,18 @@ export function CategoryContent({
   useEffect(() => {
     setCategoryState(category);
   }, [category]);
+
+  useEffect(() => {
+    setQuestionSearch("");
+  }, [category.id]);
   const [activeTab, setActiveTab] = useState<CategoryTab>(() =>
     getFirstAvailableTab(categoryState),
   );
   const [difficultyFilter, setDifficultyFilter] =
     useState<DifficultyFilter>("ALL");
   const [sort, setSort] = useState<CategorySortOption>("difficulty-asc");
+  const [questionSearch, setQuestionSearch] = useState("");
+  const debouncedQuestionSearch = useDebouncedValue(questionSearch, 250);
   const [showCompleted, setShowCompleted] = useState(true);
   const [completedIds, setCompletedIds] = useState(
     () => new Set(completedQuestionIds),
@@ -191,13 +224,26 @@ export function CategoryContent({
     return sortCategoryItems(items, sort);
   }, [categoryState.questions, difficultyFilter, sort]);
 
-  const visibleQuestions = useMemo(() => {
-    if (showCompleted) {
+  const searchFilteredQuestions = useMemo(() => {
+    const query = debouncedQuestionSearch.trim().toLowerCase();
+    if (!query) {
       return filteredQuestions;
     }
 
-    return filteredQuestions.filter((question) => !completedIds.has(question.id));
-  }, [filteredQuestions, showCompleted, completedIds]);
+    return filteredQuestions.filter((question) =>
+      questionMatchesSearch(question, query),
+    );
+  }, [filteredQuestions, debouncedQuestionSearch]);
+
+  const visibleQuestions = useMemo(() => {
+    if (showCompleted) {
+      return searchFilteredQuestions;
+    }
+
+    return searchFilteredQuestions.filter(
+      (question) => !completedIds.has(question.id),
+    );
+  }, [searchFilteredQuestions, showCompleted, completedIds]);
 
   const filteredChallenges = useMemo(() => {
     const items = filterByDifficulty(categoryState.challenges, difficultyFilter);
@@ -368,59 +414,94 @@ export function CategoryContent({
 
       {hasQuestions ? (
         <TabsContent value="questions" className="mt-0">
-          <SidebarDetailLayout
-            sidebar={
-              <ContentSidebar
-                ariaLabel="Questions in category"
-                items={visibleQuestions.map((question) => ({
-                  id: question.id,
-                  title: question.title,
-                  difficulty: question.difficulty,
-                  subtitle: `${question.answers.length} answers`,
-                  trailing: (
-                    <QuestionCompletionCheckbox
-                      questionId={question.id}
-                      isCompleted={completedIds.has(question.id)}
-                      onCompletionChange={handleCompletionChange}
-                    />
-                  ),
-                }))}
-                selectedId={selectedQuestionId}
-                onSelect={setSelectedQuestionId}
-                emptyMessage={
-                  filteredQuestions.length === 0
-                    ? "No questions match the current filter."
-                    : "No incomplete questions match the current filter. Check Show completed to review finished items."
-                }
-              />
+          <MobileQuestionFeed
+            questions={visibleQuestions}
+            selectedId={selectedQuestionId}
+            onSelect={setSelectedQuestionId}
+            searchQuery={questionSearch}
+            onSearchChange={setQuestionSearch}
+            completedIds={completedIds}
+            onCompletionChange={handleCompletionChange}
+            onQuestionChange={handleQuestionChange}
+            emptyMessage={
+              filteredQuestions.length === 0
+                ? "No questions match the current filter."
+                : questionSearch.trim()
+                  ? "No questions match your search."
+                  : "No incomplete questions match the current filter. Check Show completed to review finished items."
             }
-          >
-            {selectedQuestion ? (
-              <div className="space-y-4 p-4 sm:p-6">
-                <div className="flex justify-end">
-                  <QuestionCompletionCheckbox
-                    questionId={selectedQuestion.id}
-                    isCompleted={completedIds.has(selectedQuestion.id)}
-                    onCompletionChange={handleCompletionChange}
+          />
+
+          <div className="hidden lg:block">
+            <SidebarDetailLayout
+              sidebar={
+                <div className="flex min-h-0 flex-1 flex-col">
+                  <div className="shrink-0 border-b p-3">
+                    <Input
+                      type="search"
+                      value={questionSearch}
+                      onChange={(event) => setQuestionSearch(event.target.value)}
+                      placeholder="Search questions..."
+                      aria-label="Search questions"
+                    />
+                  </div>
+                  <ContentSidebar
+                    ariaLabel="Questions in category"
+                    searchQuery={questionSearch}
+                    items={visibleQuestions.map((question) => ({
+                      id: question.id,
+                      title: question.title,
+                      difficulty: question.difficulty,
+                      subtitle: `${question.answers.length} answers`,
+                      trailing: (
+                        <QuestionCompletionCheckbox
+                          questionId={question.id}
+                          isCompleted={completedIds.has(question.id)}
+                          onCompletionChange={handleCompletionChange}
+                        />
+                      ),
+                    }))}
+                    selectedId={selectedQuestionId}
+                    onSelect={setSelectedQuestionId}
+                    emptyMessage={
+                      filteredQuestions.length === 0
+                        ? "No questions match the current filter."
+                        : questionSearch.trim()
+                          ? "No questions match your search."
+                          : "No incomplete questions match the current filter. Check Show completed to review finished items."
+                    }
                   />
                 </div>
-                <QuestionDetailPanel
-                  question={selectedQuestion}
-                  showCategory={false}
-                  titleAs="h1"
-                  onQuestionChange={handleQuestionChange}
-                />
-                <Link
-                  href={`/questions/${selectedQuestion.id}`}
-                  className="inline-block text-sm text-primary hover:underline"
-                >
-                  Open full page →
-                </Link>
-              </div>
-            ) : (
-              <EmptyDetail message="Select a question from the list." />
-            )}
-          </SidebarDetailLayout>
+              }
+            >
+              {selectedQuestion ? (
+                <div className="space-y-4 p-4 sm:p-6">
+                  <div className="flex justify-end">
+                    <QuestionCompletionCheckbox
+                      questionId={selectedQuestion.id}
+                      isCompleted={completedIds.has(selectedQuestion.id)}
+                      onCompletionChange={handleCompletionChange}
+                    />
+                  </div>
+                  <QuestionDetailPanel
+                    question={selectedQuestion}
+                    showCategory={false}
+                    titleAs="h1"
+                    searchQuery={questionSearch}
+                    onQuestionChange={handleQuestionChange}
+                  />
+                  <Link
+                    href={`/questions/${selectedQuestion.id}`}
+                    className="inline-block text-sm text-primary hover:underline"
+                  >
+                    Open full page →
+                  </Link>
+                </div>
+              ) : (
+                <EmptyDetail message="Select a question from the list." />
+              )}
+            </SidebarDetailLayout>
+          </div>
         </TabsContent>
       ) : null}
 

@@ -2,13 +2,18 @@ import {
   getQuestionAnswerPreview,
   hasQuestionAnswerPreview,
 } from "@/lib/questions/answer-preview";
+import { highlightSearchMatches } from "@/lib/search-highlight";
 import type { QuestionWithAnswers } from "@/types";
 
 type QuestionAnswersListProps = {
   question: QuestionWithAnswers;
+  searchQuery?: string;
 };
 
-export function QuestionAnswersList({ question }: QuestionAnswersListProps) {
+export function QuestionAnswersList({
+  question,
+  searchQuery = "",
+}: QuestionAnswersListProps) {
   if (!hasQuestionAnswerPreview(question)) {
     return (
       <p className="text-sm text-muted-foreground">
@@ -38,7 +43,7 @@ export function QuestionAnswersList({ question }: QuestionAnswersListProps) {
                 {answers.length > 1 ? (
                   <span className="mr-1.5 text-muted-foreground">•</span>
                 ) : null}
-                {answer}
+                {highlightSearchMatches(answer, searchQuery)}
               </li>
             ))}
           </ul>
@@ -51,7 +56,7 @@ export function QuestionAnswersList({ question }: QuestionAnswersListProps) {
             {answers.length > 0 ? "Explanation" : "Answer"}
           </h3>
           <p className="rounded-lg border bg-muted/30 px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap text-muted-foreground">
-            {explanation}
+            {highlightSearchMatches(explanation ?? "", searchQuery)}
           </p>
         </div>
       ) : null}

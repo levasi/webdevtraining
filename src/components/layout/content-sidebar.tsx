@@ -3,6 +3,7 @@
 import Link from "next/link";
 
 import { DifficultyBadge } from "@/components/categories/category-grid";
+import { highlightSearchMatches } from "@/lib/search-highlight";
 import { cn } from "@/lib/utils";
 import type { Difficulty } from "@/generated/prisma/client";
 
@@ -21,6 +22,7 @@ type ContentSidebarProps = {
   hrefForItem?: (id: string) => string;
   emptyMessage?: string;
   ariaLabel: string;
+  searchQuery?: string;
 };
 
 export function ContentSidebar({
@@ -30,6 +32,7 @@ export function ContentSidebar({
   hrefForItem,
   emptyMessage = "No items match the current filter.",
   ariaLabel,
+  searchQuery = "",
 }: ContentSidebarProps) {
   if (items.length === 0) {
     return (
@@ -60,7 +63,7 @@ export function ContentSidebar({
                     isSelected && "text-foreground",
                   )}
                 >
-                  {item.title}
+                  {highlightSearchMatches(item.title, searchQuery)}
                 </span>
                 {item.trailing}
               </span>

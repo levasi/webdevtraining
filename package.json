@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "WATCHPACK_POLLING=false next dev --hostname localhost --webpack",
+    "dev": "WATCHPACK_POLLING=false next dev --hostname localhost",
     "dev:turbo": "WATCHPACK_POLLING=false next dev --hostname localhost",
     "dev:clean": "rm -rf .next && npm run dev",
-    "dev:network": "WATCHPACK_POLLING=false next dev --hostname 0.0.0.0 --webpack",
+    "dev:network": "WATCHPACK_POLLING=false next dev --hostname 0.0.0.0",
     "dev:webpack": "WATCHPACK_POLLING=false next dev --hostname localhost --webpack",
     "build": "prisma generate && node scripts/prisma-deploy-if-configured.mjs && next build",
     "start": "next start",

@@ -55,14 +55,9 @@ export default async function HomePage() {
   return (
     <div className="w-full px-4 py-12 sm:px-6">
       <section className="mx-auto max-w-3xl text-center">
-        <p className="mb-3 text-sm font-medium text-primary">MVP · Vercel-ready</p>
         <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
           Prepare for technical interviews with confidence
         </h1>
-        <p className="mt-4 text-lg text-muted-foreground">
-          A modern platform for frontend, backend, and full-stack developers.
-          Practice questions, run coding challenges, and track your progress.
-        </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <ButtonLink href={startHref} size="lg">
             Start practicing

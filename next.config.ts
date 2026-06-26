@@ -14,6 +14,13 @@ const isDev = process.env.NODE_ENV === "development";
 
 const nextConfig: NextConfig = {
   allowedDevOrigins,
+  turbopack: isDev
+    ? {
+        resolveAlias: {
+          "@/lib/app-fonts": devFontsPath,
+        },
+      }
+    : {},
   logging: {
     incomingRequests: {
       ignore: [
@@ -34,11 +41,6 @@ const nextConfig: NextConfig = {
   },
   ...(isDev
     ? {
-        turbopack: {
-          resolveAlias: {
-            "@/lib/app-fonts": devFontsPath,
-          },
-        },
         experimental: {
           turbopackFileSystemCacheForDev: false,
           turbopackMemoryLimit: 512 * 1024 * 1024,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Pencil } from "lucide-react";
 
@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { DIFFICULTY_LABELS } from "@/lib/constants";
 import { getQuestionAnswerPreview } from "@/lib/questions/answer-preview";
+import { highlightSearchMatches } from "@/lib/search-highlight";
 import { useSession } from "@/lib/auth-client";
 import type { QuestionWithAnswers } from "@/types";
 
@@ -27,6 +28,7 @@ type QuestionDetailPanelProps = {
   showCategory?: boolean;
   titleAs?: "h1" | "h2";
   onQuestionChange?: (question: QuestionWithAnswers) => void;
+  searchQuery?: string;
 };
 
 type EditableAnswer = {
@@ -44,11 +46,12 @@ function getEditableAnswers(question: QuestionWithAnswers): EditableAnswer[] {
     }));
 }
 
-export function QuestionDetailPanel({
+export const QuestionDetailPanel = memo(function QuestionDetailPanel({
   question,
   showCategory = true,
   titleAs = "h2",
   onQuestionChange,
+  searchQuery = "",
 }: QuestionDetailPanelProps) {
   const router = useRouter();
   const { data: session } = useSession();
@@ -215,7 +218,7 @@ export function QuestionDetailPanel({
         <>
           <div className="flex items-start justify-between gap-3">
             <TitleTag className="text-2xl font-bold leading-snug tracking-tight">
-              {displayQuestion.title}
+              {highlightSearchMatches(displayQuestion.title, searchQuery)}
             </TitleTag>
             {isAdmin ? (
               <Button
@@ -234,12 +237,15 @@ export function QuestionDetailPanel({
           </div>
 
           <p className="leading-relaxed whitespace-pre-wrap text-muted-foreground">
-            {displayQuestion.content}
+            {highlightSearchMatches(displayQuestion.content, searchQuery)}
           </p>
 
-          <QuestionAnswersList question={displayQuestion} />
+          <QuestionAnswersList
+            question={displayQuestion}
+            searchQuery={searchQuery}
+          />
         </>
       )}
     </div>
   );
-}
+});
