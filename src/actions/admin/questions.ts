@@ -1,7 +1,7 @@
 "use server";
 
 import { headers } from "next/headers";
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -99,7 +99,7 @@ export async function createQuestion(
 
     revalidatePath("/admin/questions");
     revalidatePath("/categories");
-    revalidateTag("categories");
+    updateTag("categories");
     return { success: true, data: { id: question.id } };
   } catch (error) {
     const message =
@@ -178,8 +178,8 @@ export async function updateQuestion(
     revalidatePath("/categories");
     revalidatePath(`/categories/${existing.category.slug}`);
     revalidatePath(`/questions/${data.questionId}`);
-    revalidateTag("categories");
-    revalidateTag(`category-${existing.category.slug}`);
+    updateTag("categories");
+    updateTag(`category-${existing.category.slug}`);
 
     return { success: true, data: { id: data.questionId } };
   } catch (error) {
@@ -202,7 +202,7 @@ export async function toggleQuestionPublished(
     });
 
     revalidatePath("/admin/questions");
-    revalidateTag("categories");
+    updateTag("categories");
     return { success: true, data: undefined };
   } catch (error) {
     const message =

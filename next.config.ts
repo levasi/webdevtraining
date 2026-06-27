@@ -17,7 +17,7 @@ const nextConfig: NextConfig = {
   turbopack: isDev
     ? {
         resolveAlias: {
-          "@/lib/app-fonts": devFontsPath,
+          "@/lib/app-fonts": "./src/lib/app-fonts.dev.ts",
         },
       }
     : {},
@@ -32,11 +32,6 @@ const nextConfig: NextConfig = {
     },
     fetches: {
       hmrRefreshes: false,
-    },
-  },
-  modularizeImports: {
-    "lucide-react": {
-      transform: "lucide-react/dist/esm/icons/{{kebabCase member}}",
     },
   },
   ...(isDev
