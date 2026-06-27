@@ -177,7 +177,6 @@ export async function updateQuestion(
     revalidatePath("/admin/questions");
     revalidatePath("/categories");
     revalidatePath(`/categories/${existing.category.slug}`);
-    revalidatePath(`/questions/${data.questionId}`);
     updateTag("categories");
     updateTag(`category-${existing.category.slug}`);
 

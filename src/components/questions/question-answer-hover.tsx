@@ -27,10 +27,7 @@ export function QuestionAnswerHover({
     return <div className={className}>{children}</div>;
   }
 
-  const { answers, explanation } = getQuestionAnswerPreview(question);
-  const showExplanation =
-    Boolean(explanation) &&
-    !answers.some((answer) => answer === explanation);
+  const { answers } = getQuestionAnswerPreview(question);
 
   return (
     <HoverCard>
@@ -46,33 +43,21 @@ export function QuestionAnswerHover({
         align="start"
         className="w-80 max-w-[calc(100vw-2rem)] p-4"
       >
-        {answers.length > 0 ? (
-          <div className="space-y-2">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Answer
-            </p>
-            <ul className="space-y-1.5">
-              {answers.map((answer) => (
-                <li key={answer} className="leading-relaxed whitespace-pre-wrap">
-                  {answers.length > 1 ? (
-                    <span className="mr-1.5 text-muted-foreground">•</span>
-                  ) : null}
-                  {answer}
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
-        {showExplanation ? (
-          <div className={cn(answers.length > 0 && "mt-3 border-t pt-3")}>
-            <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              {answers.length > 0 ? "Explanation" : "Answer"}
-            </p>
-            <p className="leading-relaxed whitespace-pre-wrap text-muted-foreground">
-              {explanation}
-            </p>
-          </div>
-        ) : null}
+        <div className="space-y-2">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Answer
+          </p>
+          <ul className="space-y-1.5">
+            {answers.map((answer) => (
+              <li key={answer} className="leading-relaxed whitespace-pre-wrap">
+                {answers.length > 1 ? (
+                  <span className="mr-1.5 text-muted-foreground">•</span>
+                ) : null}
+                {answer}
+              </li>
+            ))}
+          </ul>
+        </div>
       </HoverCardContent>
     </HoverCard>
   );

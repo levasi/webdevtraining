@@ -145,11 +145,6 @@ export function QuestionAnswerPicker({
                   result.correctAnswerContents.length > 1 ? "s are" : " is"
                 }: ${result.correctAnswerContents.join(", ")}`}
           </p>
-          {result.explanation && (
-            <p className="rounded-md bg-muted p-3 text-sm leading-relaxed text-muted-foreground">
-              {result.explanation}
-            </p>
-          )}
         </div>
       )}
 

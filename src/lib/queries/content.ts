@@ -230,13 +230,3 @@ export async function getCategoryNav(
     questions,
   };
 }
-
-export async function getQuestionNavContext(id: string) {
-  return db.question.findUnique({
-    where: { id, isPublished: true },
-    select: {
-      id: true,
-      category: { select: { name: true, slug: true } },
-    },
-  });
-}

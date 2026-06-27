@@ -20,5 +20,5 @@ export function categoryQuestionHref(categorySlug: string, questionId: string) {
 
 export function scrollToQuestion(questionId: string) {
   const element = document.getElementById(questionElementId(questionId));
-  element?.scrollIntoView({ behavior: "smooth", block: "start" });
+  element?.scrollIntoView({ behavior: "instant", block: "start" });
 }

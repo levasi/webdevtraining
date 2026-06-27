@@ -23,52 +23,29 @@ export function QuestionAnswersList({
     );
   }
 
-  const { answers, explanation } = getQuestionAnswerPreview(question);
-  const showExplanation =
-    Boolean(explanation) &&
-    !answers.some((answer) => answer === explanation);
+  const { answers } = getQuestionAnswerPreview(question);
 
   return (
-    <div className="space-y-4">
-      {answers.length > 0 ? (
-        <div className="space-y-2">
-          <h3 className="text-sm font-medium">
-            {answers.length > 1 ? "Answers" : "Answer"}
-          </h3>
-          <ul className="space-y-2">
-            {answers.map((answer) => (
-              <li
-                key={answer}
-                className={cn(
-                  "rounded-lg border bg-muted/30 px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap",
-                  wrapLongTextClass,
-                )}
-              >
-                {answers.length > 1 ? (
-                  <span className="mr-1.5 text-muted-foreground">•</span>
-                ) : null}
-                {highlightSearchMatches(answer, searchQuery)}
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
-
-      {showExplanation ? (
-        <div className="space-y-2">
-          <h3 className="text-sm font-medium">
-            {answers.length > 0 ? "Explanation" : "Answer"}
-          </h3>
-          <p
+    <div className="space-y-2">
+      <h3 className="text-sm font-medium">
+        {answers.length > 1 ? "Answers" : "Answer"}
+      </h3>
+      <ul className="space-y-2">
+        {answers.map((answer) => (
+          <li
+            key={answer}
             className={cn(
-              "rounded-lg border bg-muted/30 px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap text-muted-foreground",
+              "rounded-lg border bg-muted/30 px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap",
               wrapLongTextClass,
             )}
           >
-            {highlightSearchMatches(explanation ?? "", searchQuery)}
-          </p>
-        </div>
-      ) : null}
+            {answers.length > 1 ? (
+              <span className="mr-1.5 text-muted-foreground">•</span>
+            ) : null}
+            {highlightSearchMatches(answer, searchQuery)}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

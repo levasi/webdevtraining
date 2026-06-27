@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { Expand } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -100,14 +99,7 @@ export function QuestionCard({
         </div>
         <QuestionAnswerHover question={question}>
           <div className="space-y-2">
-            <CardTitle className="text-lg">
-              <Link
-                href={`/questions/${question.id}`}
-                className="hover:underline"
-              >
-                {question.title}
-              </Link>
-            </CardTitle>
+            <CardTitle className="text-lg">{question.title}</CardTitle>
             <CardDescription className="line-clamp-2">
               {question.content}
             </CardDescription>

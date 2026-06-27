@@ -39,7 +39,7 @@ export function QuizQuestionPlayer({
         <h1 className="text-2xl font-bold leading-snug tracking-tight">
           {question.title}
         </h1>
-        <p className="leading-relaxed whitespace-pre-wrap text-muted-foreground">
+        <p className="text-sm leading-relaxed whitespace-pre-wrap text-muted-foreground">
           {question.content}
         </p>
       </div>

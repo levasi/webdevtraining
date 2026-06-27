@@ -99,7 +99,6 @@ function questionMatchesSearch(
   const haystack = [
     question.title,
     question.content,
-    question.explanation,
     ...question.tags,
     ...question.answers.map((answer) => answer.content),
   ]
@@ -473,7 +472,7 @@ export function CategoryContent({
               }
             >
               {selectedQuestion ? (
-                <div className="space-y-4 p-4 sm:p-6">
+                <div className="p-4 sm:p-6">
                   <QuestionDetailPanel
                     question={selectedQuestion}
                     showCategory={false}
@@ -483,12 +482,6 @@ export function CategoryContent({
                     onCompletionChange={handleCompletionChange}
                     onQuestionChange={handleQuestionChange}
                   />
-                  <Link
-                    href={`/questions/${selectedQuestion.id}`}
-                    className="inline-block text-sm text-primary hover:underline"
-                  >
-                    Open full page →
-                  </Link>
                 </div>
               ) : (
                 <EmptyDetail message="Select a question from the list." />

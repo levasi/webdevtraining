@@ -181,10 +181,6 @@ export const QuestionDetailPanel = memo(function QuestionDetailPanel({
             />
           </div>
 
-          <p className={cn("leading-relaxed whitespace-pre-wrap text-muted-foreground", wrapLongTextClass)}>
-            {displayQuestion.content}
-          </p>
-
           <div className="space-y-3">
             <Label>{answerLabel}</Label>
             {editableAnswers.length > 0 ? (
@@ -254,10 +250,6 @@ export const QuestionDetailPanel = memo(function QuestionDetailPanel({
               </Button>
             ) : null}
           </div>
-
-          <p className={cn("leading-relaxed whitespace-pre-wrap text-muted-foreground", wrapLongTextClass)}>
-            {highlightSearchMatches(displayQuestion.content, searchQuery)}
-          </p>
 
           <QuestionAnswersList
             question={displayQuestion}

@@ -83,7 +83,6 @@ export async function toggleQuestionCompleted(
   if (isCompleted && existing) {
     await db.progress.delete({ where: { id: existing.id } });
     revalidatePath("/categories", "layout");
-    revalidatePath(`/questions/${questionId}`);
     // Backwards compat: /progress redirects to /completed
     revalidatePath("/completed");
     revalidatePath("/progress");
@@ -113,7 +112,6 @@ export async function toggleQuestionCompleted(
   });
 
   revalidatePath("/categories", "layout");
-  revalidatePath(`/questions/${questionId}`);
   // Backwards compat: /progress redirects to /completed
   revalidatePath("/completed");
   revalidatePath("/progress");

@@ -41,13 +41,8 @@ function getCategorySlugFromPathname(pathname: string): string | null {
   return match?.[1] ?? null;
 }
 
-function getQuestionIdFromPathname(pathname: string): string | null {
-  const match = pathname.match(/^\/questions\/([^/]+)$/);
-  return match?.[1] ?? null;
-}
-
-function getActiveQuestionId(pathname: string, hash: string): string | null {
-  return getQuestionIdFromPathname(pathname) ?? getQuestionIdFromHash(hash);
+function getActiveQuestionId(hash: string): string | null {
+  return getQuestionIdFromHash(hash);
 }
 
 async function fetchCategoryNav(slug: string): Promise<CategoryNavData | null> {
@@ -138,7 +133,7 @@ export function MobileNav({ open, onClose }: MobileNavProps) {
 
     async function syncMenuToRoute() {
       const categorySlug = getCategorySlugFromPathname(pathname);
-      const questionId = getActiveQuestionId(pathname, locationHash);
+      const questionId = getActiveQuestionId(locationHash);
 
       if (categorySlug) {
         setView("questions");
@@ -158,45 +153,6 @@ export function MobileNav({ open, onClose }: MobileNavProps) {
         }
 
         setActiveQuestionId(questionId);
-        setQuestionsLoading(false);
-        return;
-      }
-
-      if (questionId) {
-        setView("questions");
-        setQuestionsLoading(true);
-
-        const navResponse = await fetch(`/api/questions/${questionId}/nav`);
-        if (cancelled) {
-          return;
-        }
-
-        if (!navResponse.ok) {
-          setView("root");
-          setQuestionsLoading(false);
-          return;
-        }
-
-        const nav = (await navResponse.json()) as {
-          questionId: string;
-          category: { name: string; slug: string };
-        };
-        const data = await fetchCategoryNav(nav.category.slug);
-        if (cancelled) {
-          return;
-        }
-
-        if (data) {
-          setSelectedCategory(data.category);
-          setQuestions(data.questions);
-          setActiveQuestionId(nav.questionId);
-        } else {
-          setView("root");
-          setSelectedCategory(null);
-          setQuestions([]);
-          setActiveQuestionId(null);
-        }
-
         setQuestionsLoading(false);
         return;
       }

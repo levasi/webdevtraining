@@ -60,7 +60,6 @@ export function CreateQuestionForm({
   const [categoryId, setCategoryId] = useState(categories[0]?.id ?? "");
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [explanation, setExplanation] = useState("");
   const [difficulty, setDifficulty] =
     useState<CreateQuestionInput["difficulty"]>("BEGINNER");
   const [type, setType] =
@@ -125,7 +124,6 @@ export function CreateQuestionForm({
       categoryId,
       title,
       content,
-      explanation: explanation || undefined,
       difficulty,
       type,
       tags: tags
@@ -203,17 +201,6 @@ export function CreateQuestionForm({
               className="min-h-28"
               placeholder="Explain what a closure is and when it is useful."
               required
-            />
-          </div>
-
-          <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="explanation">Explanation (optional)</Label>
-            <Textarea
-              id="explanation"
-              value={explanation}
-              onChange={(event) => setExplanation(event.target.value)}
-              className="min-h-24"
-              placeholder="Shown after quiz completion or on the answer review screen."
             />
           </div>
 

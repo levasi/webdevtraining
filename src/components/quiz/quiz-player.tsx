@@ -214,11 +214,6 @@ export function QuizPlayer({ quiz }: QuizPlayerProps) {
                       <strong>{correctAnswer.content}</strong>
                     </p>
                   )}
-                  {result?.explanation && (
-                    <p className="rounded-md bg-muted p-3 text-muted-foreground">
-                      {result.explanation}
-                    </p>
-                  )}
                 </CardContent>
               </Card>
             );
