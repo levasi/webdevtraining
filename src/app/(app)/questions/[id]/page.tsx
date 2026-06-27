@@ -28,7 +28,7 @@ export default async function QuestionDetailPage({ params }: PageProps) {
   const isCompleted = completedQuestionIds.includes(question.id);
 
   return (
-    <div className="w-full px-4 py-8 sm:px-6">
+    <div className="w-full px-2 py-8 sm:px-6">
       <QuestionSidebarLayout
         question={question}
         items={siblings}

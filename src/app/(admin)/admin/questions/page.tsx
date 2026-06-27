@@ -39,7 +39,7 @@ export default async function AdminQuestionsPage() {
   });
 
   return (
-    <div className="w-full px-4 py-8 sm:px-6">
+    <div className="w-full px-2 py-8 sm:px-6">
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Manage Questions</h1>

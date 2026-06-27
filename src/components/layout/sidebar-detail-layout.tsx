@@ -18,7 +18,7 @@ export function SidebarDetailLayout({
         className,
       )}
     >
-      <aside className="flex max-h-64 shrink-0 flex-col overflow-hidden border-b lg:sticky lg:top-16 lg:z-10 lg:h-[calc(100vh-4rem)] lg:max-h-[calc(100vh-4rem)] lg:w-80 lg:shrink-0 lg:border-r lg:border-b-0 xl:w-96">
+      <aside className="hidden shrink-0 flex-col overflow-hidden lg:sticky lg:top-16 lg:z-10 lg:flex lg:h-[calc(100vh-4rem)] lg:max-h-[calc(100vh-4rem)] lg:w-80 lg:border-r xl:w-96">
         {sidebar}
       </aside>
       <main className="min-w-0 flex-1">{children}</main>

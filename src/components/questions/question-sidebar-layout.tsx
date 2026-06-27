@@ -46,14 +46,12 @@ export function QuestionSidebarLayout({
       }
     >
       <div className="space-y-4 p-4 sm:p-6">
-        <div className="flex justify-end">
-          <QuestionCompletionCheckbox
-            questionId={question.id}
-            isCompleted={isCompleted}
-            onCompletionChange={onCompletionChange}
-          />
-        </div>
-        <QuestionDetailPanel question={question} titleAs="h1" />
+        <QuestionDetailPanel
+          question={question}
+          titleAs="h1"
+          isCompleted={isCompleted}
+          onCompletionChange={onCompletionChange}
+        />
       </div>
     </SidebarDetailLayout>
   );

@@ -32,7 +32,7 @@ export default async function QuizQuestionPage({ params }: PageProps) {
   }
 
   return (
-    <div className="w-full px-4 py-8 sm:px-6">
+    <div className="w-full px-2 py-8 sm:px-6">
       <QuizSidebarLayout question={question} items={siblings} />
     </div>
   );

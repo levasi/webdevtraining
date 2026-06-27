@@ -4,7 +4,6 @@ import Link from "next/link";
 import { BookOpen, LayoutDashboard, Library, Menu } from "lucide-react";
 
 import { AddQuestionDialog } from "@/components/layout/add-question-dialog";
-import { CategoriesNavFlyout } from "@/components/layout/categories-nav-flyout";
 import { ButtonLink } from "@/components/ui/button-link";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,7 +18,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { signOut, useSession } from "@/lib/auth-client";
 import { navigateTo } from "@/lib/navigation";
 import { getGoogleAvatarUrl } from "@/lib/user-avatar";
-import { cn } from "@/lib/utils";
+import { CategoriesNavFlyout } from "@/components/layout/categories-nav-flyout";
 
 const navItems = [
   { href: "/categories", label: "Categories", icon: BookOpen },
@@ -149,58 +148,5 @@ export function AppHeader({ onMenuClick }: AppHeaderProps) {
         </div>
       </div>
     </header>
-  );
-}
-
-type MobileNavProps = {
-  open: boolean;
-  onClose: () => void;
-};
-
-export function MobileNav({ open, onClose }: MobileNavProps) {
-  const { data: session } = useSession();
-  const isAdmin = session?.user?.role === "ADMIN";
-
-  return (
-    <div
-      className={cn(
-        "fixed inset-0 z-50 md:hidden",
-        open ? "pointer-events-auto" : "pointer-events-none",
-      )}
-    >
-      <div
-        className={cn(
-          "absolute inset-0 bg-black/40 transition-opacity",
-          open ? "opacity-100" : "opacity-0",
-        )}
-        onClick={onClose}
-      />
-      <nav
-        className={cn(
-          "absolute left-0 top-0 h-full w-72 border-r bg-background p-4 transition-transform",
-          open ? "translate-x-0" : "-translate-x-full",
-        )}
-      >
-        <p className="mb-4 text-sm font-medium text-muted-foreground">Menu</p>
-        <div className="flex flex-col gap-1">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              prefetch={false}
-              onClick={onClose}
-              className="rounded-md px-3 py-2 text-sm hover:bg-muted"
-            >
-              {item.label}
-            </Link>
-          ))}
-          {isAdmin ? (
-            <div className="mt-2 border-t pt-3">
-              <AddQuestionDialog />
-            </div>
-          ) : null}
-        </div>
-      </nav>
-    </div>
   );
 }

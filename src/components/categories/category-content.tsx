@@ -416,8 +416,6 @@ export function CategoryContent({
         <TabsContent value="questions" className="mt-0">
           <MobileQuestionFeed
             questions={visibleQuestions}
-            selectedId={selectedQuestionId}
-            onSelect={setSelectedQuestionId}
             searchQuery={questionSearch}
             onSearchChange={setQuestionSearch}
             completedIds={completedIds}
@@ -476,18 +474,13 @@ export function CategoryContent({
             >
               {selectedQuestion ? (
                 <div className="space-y-4 p-4 sm:p-6">
-                  <div className="flex justify-end">
-                    <QuestionCompletionCheckbox
-                      questionId={selectedQuestion.id}
-                      isCompleted={completedIds.has(selectedQuestion.id)}
-                      onCompletionChange={handleCompletionChange}
-                    />
-                  </div>
                   <QuestionDetailPanel
                     question={selectedQuestion}
                     showCategory={false}
                     titleAs="h1"
                     searchQuery={questionSearch}
+                    isCompleted={completedIds.has(selectedQuestion.id)}
+                    onCompletionChange={handleCompletionChange}
                     onQuestionChange={handleQuestionChange}
                   />
                   <Link

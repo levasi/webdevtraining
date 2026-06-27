@@ -6,6 +6,7 @@ import { Pencil } from "lucide-react";
 
 import { updateQuestion } from "@/actions/admin/questions";
 import { QuestionAnswersList } from "@/components/questions/question-answers-list";
+import { QuestionCompletionCheckbox } from "@/components/questions/question-completion-checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { DIFFICULTY_LABELS } from "@/lib/constants";
 import { getQuestionAnswerPreview } from "@/lib/questions/answer-preview";
 import { highlightSearchMatches } from "@/lib/search-highlight";
+import { cn, wrapLongTextClass } from "@/lib/utils";
 import { useSession } from "@/lib/auth-client";
 import type { QuestionWithAnswers } from "@/types";
 
@@ -29,6 +31,8 @@ type QuestionDetailPanelProps = {
   titleAs?: "h1" | "h2";
   onQuestionChange?: (question: QuestionWithAnswers) => void;
   searchQuery?: string;
+  isCompleted?: boolean;
+  onCompletionChange?: (questionId: string, completed: boolean) => void;
 };
 
 type EditableAnswer = {
@@ -52,6 +56,8 @@ export const QuestionDetailPanel = memo(function QuestionDetailPanel({
   titleAs = "h2",
   onQuestionChange,
   searchQuery = "",
+  isCompleted = false,
+  onCompletionChange,
 }: QuestionDetailPanelProps) {
   const router = useRouter();
   const { data: session } = useSession();
@@ -141,17 +147,24 @@ export const QuestionDetailPanel = memo(function QuestionDetailPanel({
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-2">
-        <Badge variant={difficultyVariant[displayQuestion.difficulty]}>
-          {DIFFICULTY_LABELS[displayQuestion.difficulty]}
-        </Badge>
-        {showCategory && (
-          <Badge variant="outline">{displayQuestion.category.name}</Badge>
-        )}
-        <Badge variant="secondary">
-          {displayQuestion.type.replace("_", " ")}
-        </Badge>
+    <div className={cn("space-y-6", wrapLongTextClass)}>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant={difficultyVariant[displayQuestion.difficulty]}>
+            {DIFFICULTY_LABELS[displayQuestion.difficulty]}
+          </Badge>
+          {showCategory && (
+            <Badge variant="outline">{displayQuestion.category.name}</Badge>
+          )}
+          <Badge variant="secondary">
+            {displayQuestion.type.replace("_", " ")}
+          </Badge>
+        </div>
+        <QuestionCompletionCheckbox
+          questionId={displayQuestion.id}
+          isCompleted={isCompleted}
+          onCompletionChange={onCompletionChange}
+        />
       </div>
 
       {editing ? (
@@ -168,7 +181,7 @@ export const QuestionDetailPanel = memo(function QuestionDetailPanel({
             />
           </div>
 
-          <p className="leading-relaxed whitespace-pre-wrap text-muted-foreground">
+          <p className={cn("leading-relaxed whitespace-pre-wrap text-muted-foreground", wrapLongTextClass)}>
             {displayQuestion.content}
           </p>
 
@@ -217,7 +230,12 @@ export const QuestionDetailPanel = memo(function QuestionDetailPanel({
       ) : (
         <>
           <div className="flex items-start justify-between gap-3">
-            <TitleTag className="text-2xl font-bold leading-snug tracking-tight">
+            <TitleTag
+              className={cn(
+                "text-2xl font-bold leading-snug tracking-tight",
+                wrapLongTextClass,
+              )}
+            >
               {highlightSearchMatches(displayQuestion.title, searchQuery)}
             </TitleTag>
             {isAdmin ? (
@@ -225,6 +243,7 @@ export const QuestionDetailPanel = memo(function QuestionDetailPanel({
                 type="button"
                 size="sm"
                 variant="outline"
+                className="shrink-0"
                 onClick={() => {
                   resetDraft();
                   setEditing(true);
@@ -236,7 +255,7 @@ export const QuestionDetailPanel = memo(function QuestionDetailPanel({
             ) : null}
           </div>
 
-          <p className="leading-relaxed whitespace-pre-wrap text-muted-foreground">
+          <p className={cn("leading-relaxed whitespace-pre-wrap text-muted-foreground", wrapLongTextClass)}>
             {highlightSearchMatches(displayQuestion.content, searchQuery)}
           </p>
 

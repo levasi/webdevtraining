@@ -3,6 +3,7 @@ import {
   hasQuestionAnswerPreview,
 } from "@/lib/questions/answer-preview";
 import { highlightSearchMatches } from "@/lib/search-highlight";
+import { cn, wrapLongTextClass } from "@/lib/utils";
 import type { QuestionWithAnswers } from "@/types";
 
 type QuestionAnswersListProps = {
@@ -38,7 +39,10 @@ export function QuestionAnswersList({
             {answers.map((answer) => (
               <li
                 key={answer}
-                className="rounded-lg border bg-muted/30 px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap"
+                className={cn(
+                  "rounded-lg border bg-muted/30 px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap",
+                  wrapLongTextClass,
+                )}
               >
                 {answers.length > 1 ? (
                   <span className="mr-1.5 text-muted-foreground">•</span>
@@ -55,7 +59,12 @@ export function QuestionAnswersList({
           <h3 className="text-sm font-medium">
             {answers.length > 0 ? "Explanation" : "Answer"}
           </h3>
-          <p className="rounded-lg border bg-muted/30 px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap text-muted-foreground">
+          <p
+            className={cn(
+              "rounded-lg border bg-muted/30 px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap text-muted-foreground",
+              wrapLongTextClass,
+            )}
+          >
             {highlightSearchMatches(explanation ?? "", searchQuery)}
           </p>
         </div>

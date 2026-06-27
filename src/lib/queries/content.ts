@@ -2,6 +2,7 @@ import { unstable_cache } from "next/cache";
 import { cache } from "react";
 
 import { db } from "@/lib/db";
+import type { Question } from "@/generated/prisma/client";
 import type { CategorySummary, QuestionWithAnswers } from "@/types";
 
 const CATEGORY_REVALIDATE_SECONDS = 300;
@@ -189,4 +190,53 @@ export async function getQuizById(id: string) {
         answers: entry.question.answers,
       })),
   };
+}
+
+export type CategoryNavQuestion = Pick<Question, "id" | "title" | "difficulty">;
+
+export type CategoryNavData = {
+  category: {
+    name: string;
+    slug: string;
+    questionCount: number;
+  };
+  questions: CategoryNavQuestion[];
+};
+
+export async function getCategoryNav(
+  slug: string,
+): Promise<CategoryNavData | null> {
+  const category = await db.category.findUnique({
+    where: { slug },
+    select: { id: true, name: true, slug: true },
+  });
+
+  if (!category) {
+    return null;
+  }
+
+  const questions = await db.question.findMany({
+    where: { isPublished: true, categoryId: category.id },
+    select: { id: true, title: true, difficulty: true },
+    orderBy: [{ difficulty: "asc" }, { title: "asc" }],
+  });
+
+  return {
+    category: {
+      name: category.name,
+      slug: category.slug,
+      questionCount: questions.length,
+    },
+    questions,
+  };
+}
+
+export async function getQuestionNavContext(id: string) {
+  return db.question.findUnique({
+    where: { id, isPublished: true },
+    select: {
+      id: true,
+      category: { select: { name: true, slug: true } },
+    },
+  });
 }

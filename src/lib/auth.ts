@@ -2,7 +2,7 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 
 import { db } from "@/lib/db";
-import { getAppUrl } from "@/lib/app-url";
+import { getAppUrl, getGoogleOAuthRedirectUri } from "@/lib/app-url";
 
 const appUrl = getAppUrl();
 
@@ -16,6 +16,14 @@ export const auth = betterAuth({
       ? undefined
       : "dev-only-secret-change-me-before-production"),
   baseURL: appUrl,
+  trustedOrigins: [
+    appUrl,
+    process.env.NEXT_PUBLIC_APP_URL,
+    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined,
+    process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+      : undefined,
+  ].filter((origin): origin is string => Boolean(origin)),
   database: prismaAdapter(db, {
     provider: "postgresql",
   }),
@@ -25,7 +33,7 @@ export const auth = betterAuth({
           google: {
             clientId: googleClientId,
             clientSecret: googleClientSecret,
-            redirectURI: `${appUrl}/api/auth/google/callback`,
+            redirectURI: getGoogleOAuthRedirectUri(appUrl),
             prompt: "select_account",
             overrideUserInfoOnSignIn: true,
             mapProfileToUser: (profile) => ({
