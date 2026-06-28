@@ -22,7 +22,6 @@ import { CategoriesNavFlyout } from "@/components/layout/categories-nav-flyout";
 
 const navItems = [
   { href: "/categories", label: "Categories", icon: BookOpen },
-  { href: "/bookmarks", label: "Bookmarks", icon: BookOpen },
   { href: "/completed", label: "Completed", icon: LayoutDashboard },
   { href: "/resources", label: "Resources", icon: Library },
 ];

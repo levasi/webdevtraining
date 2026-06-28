@@ -21,7 +21,7 @@ export default function RegisterPage() {
           <CardTitle>Create account</CardTitle>
           <CardDescription>
             {googleEnabled
-              ? "Sign up with Google to track bookmarks, notes, and progress."
+              ? "Sign up with Google to track your progress."
               : "Account creation is temporarily unavailable on this deployment."}
           </CardDescription>
         </CardHeader>

@@ -36,7 +36,7 @@ const features = [
     icon: Sparkles,
     title: "Track Progress",
     description:
-      "Bookmarks, notes, study history, and per-category progress dashboards.",
+      "Notes, study history, and per-category progress dashboards.",
   },
 ];
 
