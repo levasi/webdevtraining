@@ -24,7 +24,7 @@ const features = [
     icon: Brain,
     title: "Multiple Learning Modes",
     description:
-      "Quizzes, coding challenges, API drills, and interview simulation.",
+      "Quizzes and coding challenges with explanations and progress tracking.",
   },
   {
     icon: Code2,

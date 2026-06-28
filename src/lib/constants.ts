@@ -28,6 +28,4 @@ export const DIFFICULTY_LABELS = {
 export const LEARNING_MODES = [
   { slug: "quiz", label: "Quiz Mode", mode: "QUIZ" },
   { slug: "challenges", label: "Coding Challenges", mode: "CODING" },
-  { slug: "api-challenges", label: "API Challenges", mode: "API_CHALLENGE" },
-  { slug: "interview", label: "Interview Simulation", mode: "INTERVIEW" },
 ] as const;
