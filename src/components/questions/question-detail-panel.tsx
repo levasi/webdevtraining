@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { Pencil } from "lucide-react";
 
 import { updateQuestion } from "@/actions/admin/questions";
+import { RichTextEditor } from "@/components/editor/rich-text-editor";
+import { DeleteQuestionButton } from "@/components/questions/delete-question-button";
 import { QuestionAnswersList } from "@/components/questions/question-answers-list";
 import { QuestionCompletionCheckbox } from "@/components/questions/question-completion-checkbox";
 import { Badge } from "@/components/ui/badge";
@@ -14,9 +16,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { DIFFICULTY_LABELS } from "@/lib/constants";
 import { getQuestionAnswerPreview } from "@/lib/questions/answer-preview";
+import { isRichTextEmpty } from "@/lib/rich-text";
 import { highlightSearchMatches } from "@/lib/search-highlight";
 import { cn, wrapLongTextClass } from "@/lib/utils";
-import { useSession } from "@/lib/auth-client";
 import type { QuestionWithAnswers } from "@/types";
 
 const difficultyVariant = {
@@ -33,6 +35,8 @@ type QuestionDetailPanelProps = {
   searchQuery?: string;
   isCompleted?: boolean;
   onCompletionChange?: (questionId: string, completed: boolean) => void;
+  canEdit?: boolean;
+  onQuestionDeleted?: (questionId: string) => void;
 };
 
 type EditableAnswer = {
@@ -58,10 +62,10 @@ export const QuestionDetailPanel = memo(function QuestionDetailPanel({
   searchQuery = "",
   isCompleted = false,
   onCompletionChange,
+  canEdit = false,
+  onQuestionDeleted,
 }: QuestionDetailPanelProps) {
   const router = useRouter();
-  const { data: session } = useSession();
-  const isAdmin = session?.user?.role === "ADMIN";
   const TitleTag = titleAs;
   const [displayQuestion, setDisplayQuestion] = useState(question);
   const [editing, setEditing] = useState(false);
@@ -108,6 +112,15 @@ export const QuestionDetailPanel = memo(function QuestionDetailPanel({
     event.preventDefault();
     setLoading(true);
     setError(null);
+
+    if (
+      displayQuestion.type === "EXPLANATION" &&
+      editableAnswers.some((answer) => isRichTextEmpty(answer.content))
+    ) {
+      setError("Write an explanation before saving.");
+      setLoading(false);
+      return;
+    }
 
     const answers = displayQuestion.answers
       .sort((a, b) => a.sortOrder - b.sortOrder)
@@ -184,18 +197,28 @@ export const QuestionDetailPanel = memo(function QuestionDetailPanel({
           <div className="space-y-3">
             <Label>{answerLabel}</Label>
             {editableAnswers.length > 0 ? (
-              editableAnswers.map((answer) => (
-                <Textarea
-                  key={answer.id}
-                  id={`answer-${answer.id}`}
-                  value={answer.content}
-                  onChange={(event) =>
-                    updateAnswerContent(answer.id, event.target.value)
-                  }
-                  className="min-h-20"
-                  required
-                />
-              ))
+              editableAnswers.map((answer) =>
+                displayQuestion.type === "EXPLANATION" ? (
+                  <RichTextEditor
+                    key={answer.id}
+                    id={`answer-${answer.id}`}
+                    value={answer.content}
+                    onChange={(html) => updateAnswerContent(answer.id, html)}
+                    placeholder="Write the detailed explanation or model answer..."
+                  />
+                ) : (
+                  <Textarea
+                    key={answer.id}
+                    id={`answer-${answer.id}`}
+                    value={answer.content}
+                    onChange={(event) =>
+                      updateAnswerContent(answer.id, event.target.value)
+                    }
+                    className="min-h-20"
+                    required
+                  />
+                ),
+              )
             ) : (
               <p className="text-sm text-muted-foreground">
                 This question has no editable answer text.
@@ -234,20 +257,26 @@ export const QuestionDetailPanel = memo(function QuestionDetailPanel({
             >
               {highlightSearchMatches(displayQuestion.title, searchQuery)}
             </TitleTag>
-            {isAdmin ? (
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                className="shrink-0"
-                onClick={() => {
-                  resetDraft();
-                  setEditing(true);
-                }}
-              >
-                <Pencil className="size-3.5" />
-                Edit
-              </Button>
+            {canEdit ? (
+              <div className="flex shrink-0 gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    resetDraft();
+                    setEditing(true);
+                  }}
+                >
+                  <Pencil className="size-3.5" />
+                  Edit
+                </Button>
+                <DeleteQuestionButton
+                  questionId={displayQuestion.id}
+                  questionTitle={displayQuestion.title}
+                  onDeleted={onQuestionDeleted}
+                />
+              </div>
             ) : null}
           </div>
 

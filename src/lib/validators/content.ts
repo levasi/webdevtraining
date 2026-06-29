@@ -7,6 +7,7 @@ export const difficultySchema = z.enum([
 ]);
 
 export const questionTypeSchema = z.enum([
+  "EXPLANATION",
   "MULTIPLE_CHOICE",
   "TRUE_FALSE",
   "SHORT_ANSWER",
@@ -20,7 +21,7 @@ export const createQuestionSchema = z
     content: z.string().min(10),
     explanation: z.string().optional(),
     difficulty: difficultySchema,
-    type: questionTypeSchema.default("MULTIPLE_CHOICE"),
+    type: questionTypeSchema.default("EXPLANATION"),
     tags: z.array(z.string()).default([]),
     isPublished: z.boolean().default(true),
     answers: z
@@ -35,7 +36,11 @@ export const createQuestionSchema = z
   .superRefine((data, ctx) => {
     const correctCount = data.answers.filter((answer) => answer.isCorrect).length;
 
-    if (data.type === "FLASHCARD" || data.type === "SHORT_ANSWER") {
+    if (
+      data.type === "EXPLANATION" ||
+      data.type === "FLASHCARD" ||
+      data.type === "SHORT_ANSWER"
+    ) {
       if (correctCount < 1) {
         ctx.addIssue({
           code: "custom",
@@ -85,6 +90,10 @@ export const updateQuestionSchema = z.object({
       }),
     )
     .min(1),
+});
+
+export const deleteQuestionSchema = z.object({
+  questionId: z.string().min(1),
 });
 
 export const createChallengeSchema = z.object({

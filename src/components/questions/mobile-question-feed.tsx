@@ -15,7 +15,9 @@ type MobileQuestionFeedProps = {
   completedIds: Set<string>;
   onCompletionChange: (questionId: string, completed: boolean) => void;
   onQuestionChange?: (question: QuestionWithAnswers) => void;
+  onQuestionDeleted?: (questionId: string) => void;
   emptyMessage?: string;
+  canEdit?: boolean;
 };
 
 export function MobileQuestionFeed({
@@ -25,7 +27,9 @@ export function MobileQuestionFeed({
   completedIds,
   onCompletionChange,
   onQuestionChange,
+  onQuestionDeleted,
   emptyMessage = "No questions match the current filter.",
+  canEdit = false,
 }: MobileQuestionFeedProps) {
   useEffect(() => {
     function scrollToHashQuestion() {
@@ -73,6 +77,8 @@ export function MobileQuestionFeed({
                 isCompleted={completedIds.has(question.id)}
                 onCompletionChange={onCompletionChange}
                 onQuestionChange={onQuestionChange}
+                onQuestionDeleted={onQuestionDeleted}
+                canEdit={canEdit}
               />
             </article>
           ))}

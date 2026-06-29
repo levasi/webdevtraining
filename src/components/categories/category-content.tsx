@@ -50,6 +50,7 @@ type CategoryContentProps = {
     articles: Article[];
   };
   completedQuestionIds?: string[];
+  isAdmin?: boolean;
 };
 
 const difficultyFilters: Array<{ value: DifficultyFilter; label: string }> = [
@@ -157,6 +158,7 @@ function EmptyDetail({ message }: { message: string }) {
 export function CategoryContent({
   category,
   completedQuestionIds = [],
+  isAdmin = false,
 }: CategoryContentProps) {
   const [categoryState, setCategoryState] = useState(category);
 
@@ -316,6 +318,15 @@ export function CategoryContent({
     }));
   }
 
+  function handleQuestionDeleted(questionId: string) {
+    setCategoryState((current) => ({
+      ...current,
+      questions: current.questions.filter(
+        (question) => question.id !== questionId,
+      ),
+    }));
+  }
+
   function handleCompletionChange(questionId: string, completed: boolean) {
     setCompletedIds((current) => {
       const next = new Set(current);
@@ -420,6 +431,8 @@ export function CategoryContent({
             completedIds={completedIds}
             onCompletionChange={handleCompletionChange}
             onQuestionChange={handleQuestionChange}
+            onQuestionDeleted={handleQuestionDeleted}
+            canEdit={isAdmin}
             emptyMessage={
               filteredQuestions.length === 0
                 ? "No questions match the current filter."
@@ -481,6 +494,8 @@ export function CategoryContent({
                     isCompleted={completedIds.has(selectedQuestion.id)}
                     onCompletionChange={handleCompletionChange}
                     onQuestionChange={handleQuestionChange}
+                    onQuestionDeleted={handleQuestionDeleted}
+                    canEdit={isAdmin}
                   />
                 </div>
               ) : (

@@ -6,7 +6,11 @@ import { revalidatePath, updateTag } from "next/cache";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { normalizeQuestionText } from "@/lib/questions/dedup";
-import { createQuestionSchema, updateQuestionSchema } from "@/lib/validators/content";
+import {
+  createQuestionSchema,
+  deleteQuestionSchema,
+  updateQuestionSchema,
+} from "@/lib/validators/content";
 import type { ActionResult } from "@/types";
 
 async function requireAdmin() {
@@ -184,6 +188,43 @@ export async function updateQuestion(
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Failed to update question";
+    return { success: false, error: message };
+  }
+}
+
+export async function deleteQuestion(
+  input: unknown,
+): Promise<ActionResult<{ id: string }>> {
+  try {
+    await requireAdmin();
+    const { questionId } = deleteQuestionSchema.parse(input);
+
+    const existing = await db.question.findUnique({
+      where: { id: questionId },
+      select: {
+        id: true,
+        category: { select: { slug: true } },
+      },
+    });
+
+    if (!existing) {
+      return { success: false, error: "Question not found." };
+    }
+
+    await db.question.delete({
+      where: { id: questionId },
+    });
+
+    revalidatePath("/admin/questions");
+    revalidatePath("/categories");
+    revalidatePath(`/categories/${existing.category.slug}`);
+    updateTag("categories");
+    updateTag(`category-${existing.category.slug}`);
+
+    return { success: true, data: { id: questionId } };
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Failed to delete question";
     return { success: false, error: message };
   }
 }

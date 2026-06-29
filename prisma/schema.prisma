@@ -89,6 +89,7 @@ enum Difficulty {
 }
 
 enum QuestionType {
+  EXPLANATION
   MULTIPLE_CHOICE
   TRUE_FALSE
   SHORT_ANSWER
@@ -137,7 +138,7 @@ model Question {
   content     String       @db.Text
   explanation String?      @db.Text
   difficulty  Difficulty
-  type        QuestionType @default(MULTIPLE_CHOICE)
+  type        QuestionType @default(EXPLANATION)
   tags        String[]
   isPublished Boolean      @default(true)
   createdAt   DateTime     @default(now())

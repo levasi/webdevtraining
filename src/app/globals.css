@@ -161,3 +161,68 @@
     --font-sans: "Bookerly", Georgia, "Times New Roman", serif;
   }
 }
+
+.rich-text-content,
+.tiptap {
+  @apply space-y-3 text-sm leading-relaxed text-foreground;
+}
+
+.rich-text-content h2,
+.tiptap h2 {
+  @apply text-lg font-semibold tracking-tight;
+}
+
+.rich-text-content h3,
+.tiptap h3 {
+  @apply text-base font-semibold tracking-tight;
+}
+
+.rich-text-content p,
+.tiptap p {
+  @apply text-muted-foreground;
+}
+
+.rich-text-content strong,
+.tiptap strong {
+  @apply font-semibold text-foreground;
+}
+
+.rich-text-content ul,
+.tiptap ul {
+  @apply list-disc space-y-1 pl-6 text-muted-foreground;
+}
+
+.rich-text-content ol,
+.tiptap ol {
+  @apply list-decimal space-y-1 pl-6 text-muted-foreground;
+}
+
+.rich-text-content blockquote,
+.tiptap blockquote {
+  @apply border-l-2 border-border pl-4 text-muted-foreground italic;
+}
+
+.rich-text-content code,
+.tiptap code {
+  @apply rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground;
+}
+
+.rich-text-content pre,
+.tiptap pre {
+  @apply overflow-x-auto rounded-lg border bg-muted/50 p-3 font-mono text-[0.9em] text-foreground;
+}
+
+.rich-text-content pre code,
+.tiptap pre code {
+  @apply bg-transparent p-0;
+}
+
+.rich-text-content a,
+.tiptap a {
+  @apply text-primary underline underline-offset-4;
+}
+
+.tiptap p.is-editor-empty:first-child::before {
+  @apply pointer-events-none float-left h-0 text-muted-foreground;
+  content: attr(data-placeholder);
+}

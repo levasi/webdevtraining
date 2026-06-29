@@ -33,6 +33,8 @@ export default async function CategoryDetailPage({ params }: PageProps) {
     ? await getCompletedQuestionIds(session.user.id)
     : [];
 
+  const isAdmin = session?.user?.role === "ADMIN";
+
   return (
     <div className="w-full px-2 py-8 sm:px-6">
       <div className="mb-8">
@@ -49,6 +51,7 @@ export default async function CategoryDetailPage({ params }: PageProps) {
           articles: category.articles,
         }}
         completedQuestionIds={completedQuestionIds}
+        isAdmin={isAdmin}
       />
     </div>
   );

@@ -74,6 +74,26 @@ describe("createQuestionSchema", () => {
     expect(result.success).toBe(false);
   });
 
+  it("allows a single correct answer for explanation questions", () => {
+    const result = createQuestionSchema.safeParse({
+      categoryId: "cat-1",
+      title: "Sample explanation title",
+      content: "Explain event bubbling in the DOM.",
+      difficulty: "INTERMEDIATE",
+      type: "EXPLANATION",
+      tags: ["dom"],
+      isPublished: true,
+      answers: [
+        {
+          content: "Events propagate from the target element up through its ancestors.",
+          isCorrect: true,
+        },
+      ],
+    });
+
+    expect(result.success).toBe(true);
+  });
+
   it("allows a single correct answer for flashcards", () => {
     const result = createQuestionSchema.safeParse({
       categoryId: "cat-1",

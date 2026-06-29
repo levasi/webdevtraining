@@ -78,25 +78,26 @@ export function AddQuestionDialog() {
         }
       />
       <DialogContent
-        className="flex max-h-[calc(100vh-2rem)] w-full max-w-4xl flex-col overflow-hidden sm:max-w-4xl"
+        className="flex max-h-[min(92vh,52rem)] w-full max-w-3xl flex-col gap-0 overflow-hidden p-0 ring-0 sm:max-w-3xl"
         showCloseButton
       >
-        <DialogHeader>
-          <DialogTitle>Add question</DialogTitle>
+        <DialogHeader className="shrink-0 border-b px-6 py-5 pr-14">
+          <DialogTitle className="text-lg">Add question</DialogTitle>
           <DialogDescription>
-            Create a new interview question and save it to the database.
+            Add a new item to the question bank. Explanation questions support rich
+            text answers.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
           {loadingCategories ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">
+            <p className="py-12 text-center text-sm text-muted-foreground">
               Loading categories...
             </p>
           ) : loadError ? (
-            <p className="py-8 text-center text-sm text-destructive">{loadError}</p>
+            <p className="py-12 text-center text-sm text-destructive">{loadError}</p>
           ) : categories.length === 0 ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">
+            <p className="py-12 text-center text-sm text-muted-foreground">
               No categories found. Run the database seed before creating questions.
             </p>
           ) : (
@@ -104,6 +105,7 @@ export function AddQuestionDialog() {
               categories={categories}
               onSuccess={handleSuccess}
               onCancel={() => setOpen(false)}
+              plain
             />
           )}
         </div>

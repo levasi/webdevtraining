@@ -4,6 +4,7 @@ import {
 } from "@/lib/questions/answer-preview";
 import { highlightSearchMatches } from "@/lib/search-highlight";
 import { cn, wrapLongTextClass } from "@/lib/utils";
+import { RichTextContent } from "@/components/editor/rich-text-content";
 import type { QuestionWithAnswers } from "@/types";
 
 type QuestionAnswersListProps = {
@@ -35,14 +36,21 @@ export function QuestionAnswersList({
           <li
             key={answer}
             className={cn(
-              "rounded-lg border bg-muted/30 px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap",
+              "rounded-lg border bg-muted/30 px-4 py-3 text-sm leading-relaxed",
+              question.type === "EXPLANATION" ? "" : "whitespace-pre-wrap",
               wrapLongTextClass,
             )}
           >
-            {answers.length > 1 ? (
-              <span className="mr-1.5 text-muted-foreground">•</span>
-            ) : null}
-            {highlightSearchMatches(answer, searchQuery)}
+            {question.type === "EXPLANATION" ? (
+              <RichTextContent html={answer} />
+            ) : (
+              <>
+                {answers.length > 1 ? (
+                  <span className="mr-1.5 text-muted-foreground">•</span>
+                ) : null}
+                {highlightSearchMatches(answer, searchQuery)}
+              </>
+            )}
           </li>
         ))}
       </ul>

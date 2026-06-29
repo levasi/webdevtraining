@@ -1,14 +1,8 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { Badge } from "@/components/ui/badge";
+import { AdminQuestionList } from "@/components/admin/admin-question-list";
 import { ButtonLink } from "@/components/ui/button-link";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 
@@ -50,37 +44,7 @@ export default async function AdminQuestionsPage() {
         <ButtonLink href="/admin/questions/new">Create question</ButtonLink>
       </div>
 
-      <div className="space-y-3">
-        {questions.length === 0 ? (
-          <Card>
-            <CardContent className="py-10 text-center text-muted-foreground">
-              No questions yet. Create the first one to get started.
-            </CardContent>
-          </Card>
-        ) : (
-          questions.map((question) => (
-            <Card key={question.id}>
-              <CardHeader className="flex-row items-center justify-between gap-4">
-                <div>
-                  <CardTitle className="text-base">{question.title}</CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    {question.category.name}
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <Badge variant="outline">{question.difficulty}</Badge>
-                  <Badge variant={question.isPublished ? "default" : "secondary"}>
-                    {question.isPublished ? "Published" : "Draft"}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="line-clamp-2 text-sm text-muted-foreground">
-                {question.content}
-              </CardContent>
-            </Card>
-          ))
-        )}
-      </div>
+      <AdminQuestionList questions={questions} />
     </div>
   );
 }

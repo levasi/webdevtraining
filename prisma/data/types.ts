@@ -1,5 +1,6 @@
 export type SeedDifficulty = "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
 export type SeedQuestionType =
+  | "EXPLANATION"
   | "MULTIPLE_CHOICE"
   | "TRUE_FALSE"
   | "FLASHCARD"
