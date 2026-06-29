@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 
 import { AuthUnavailableMessage } from "@/components/auth/auth-unavailable-message";
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
@@ -9,10 +11,20 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { auth } from "@/lib/auth";
 import { isGoogleAuthEnabled } from "@/lib/auth-providers";
 
-export default function RegisterPage() {
+export default async function RegisterPage() {
   const googleEnabled = isGoogleAuthEnabled();
+
+  try {
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (session?.user) {
+      redirect("/");
+    }
+  } catch {
+    // Database or auth unavailable during build/local setup.
+  }
 
   return (
     <div className="mx-auto flex min-h-[70vh] max-w-md items-center px-4 py-12">
@@ -27,7 +39,7 @@ export default function RegisterPage() {
         </CardHeader>
         <CardContent>
           {googleEnabled ? (
-            <GoogleSignInButton label="Sign up with Google" />
+            <GoogleSignInButton callbackURL="/" label="Sign up with Google" />
           ) : (
             <AuthUnavailableMessage />
           )}

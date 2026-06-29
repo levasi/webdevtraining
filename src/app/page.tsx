@@ -12,7 +12,7 @@ export default async function HomePage() {
   try {
     const session = await auth.api.getSession({ headers: await headers() });
     if (session?.user) {
-      startHref = "/categories";
+      startHref = "#categories";
     }
   } catch {
     // Database or auth unavailable during build/local setup.
@@ -34,7 +34,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto mt-16 max-w-7xl">
+      <section id="categories" className="mx-auto mt-16 max-w-7xl scroll-mt-20">
         <div className="mb-6">
           <h2 className="text-2xl font-semibold tracking-tight">Categories</h2>
           <p className="mt-2 text-muted-foreground">

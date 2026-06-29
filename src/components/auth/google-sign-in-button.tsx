@@ -39,7 +39,7 @@ function GoogleIcon({ className }: { className?: string }) {
 }
 
 export function GoogleSignInButton({
-  callbackURL = "/categories",
+  callbackURL = "/",
   label = "Continue with Google",
 }: GoogleSignInButtonProps) {
   const [error, setError] = useState<string | null>(null);
