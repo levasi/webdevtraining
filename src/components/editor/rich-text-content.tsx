@@ -1,3 +1,5 @@
+"use client";
+
 import { sanitizeRichText } from "@/lib/rich-text";
 import { cn } from "@/lib/utils";
 

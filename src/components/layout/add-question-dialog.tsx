@@ -1,11 +1,11 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { getQuestionFormCategories } from "@/actions/admin/questions";
-import { CreateQuestionForm } from "@/components/admin/create-question-form";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -15,6 +15,21 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+
+const CreateQuestionForm = dynamic(
+  () =>
+    import("@/components/admin/create-question-form").then(
+      (module) => module.CreateQuestionForm,
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <p className="py-12 text-center text-sm text-muted-foreground">
+        Loading editor...
+      </p>
+    ),
+  },
+);
 
 type CategoryOption = {
   id: string;

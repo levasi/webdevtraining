@@ -8,11 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import {
-  RESOURCE_TIERS,
-  THIRTY_DAY_STUDY_PLAN,
-} from "@/lib/resources";
+import { RESOURCE_TIERS } from "@/lib/resources";
 
 export function ResourcesContent() {
   return (
@@ -65,38 +61,6 @@ export function ResourcesContent() {
           </div>
         </section>
       ))}
-
-      <section className="space-y-4">
-        <div>
-          <h2 className="text-xl font-semibold tracking-tight">
-            Suggested 30-day focus
-          </h2>
-          <p className="mt-2 max-w-3xl text-muted-foreground">
-            This combination gives you the highest probability of passing
-            JavaScript-heavy senior frontend interviews.
-          </p>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Time allocation</CardTitle>
-            <CardDescription>
-              How to split your study time over the next 30 days.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            {THIRTY_DAY_STUDY_PLAN.map((item) => (
-              <div key={item.resource} className="space-y-2">
-                <div className="flex items-center justify-between gap-4 text-sm">
-                  <span className="font-medium">{item.resource}</span>
-                  <span className="text-muted-foreground">{item.percentage}%</span>
-                </div>
-                <Progress value={item.percentage} />
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      </section>
     </div>
   );
 }

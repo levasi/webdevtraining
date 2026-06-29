@@ -1,44 +1,10 @@
-import Link from "next/link";
 import { headers } from "next/headers";
-import { ArrowRight, BookOpen, Brain, Code2, Sparkles } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
+import { CategoryGrid } from "@/components/categories/category-grid";
 import { ButtonLink } from "@/components/ui/button-link";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { LEARNING_MODES } from "@/lib/constants";
 import { auth } from "@/lib/auth";
-
-const features = [
-  {
-    icon: BookOpen,
-    title: "Question Bank",
-    description:
-      "18 categories from JavaScript to System Design with difficulty levels.",
-  },
-  {
-    icon: Brain,
-    title: "Multiple Learning Modes",
-    description:
-      "Quizzes and coding challenges with explanations and progress tracking.",
-  },
-  {
-    icon: Code2,
-    title: "Coding Playground",
-    description:
-      "Run JavaScript solutions against test cases with hints and progress tracking.",
-  },
-  {
-    icon: Sparkles,
-    title: "Track Progress",
-    description:
-      "Notes, study history, and per-category progress dashboards.",
-  },
-];
+import { getCategories } from "@/lib/queries/content";
 
 export default async function HomePage() {
   let startHref = "/register";
@@ -52,6 +18,8 @@ export default async function HomePage() {
     // Database or auth unavailable during build/local setup.
   }
 
+  const categories = await getCategories();
+
   return (
     <div className="w-full px-4 py-12 sm:px-6">
       <section className="mx-auto max-w-3xl text-center">
@@ -63,40 +31,18 @@ export default async function HomePage() {
             Start practicing
             <ArrowRight className="size-4" />
           </ButtonLink>
-          <ButtonLink href="/categories" size="lg" variant="outline">
-            Browse categories
-          </ButtonLink>
         </div>
       </section>
 
-      <section className="mt-16 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {features.map((feature) => (
-          <Card key={feature.title}>
-            <CardHeader>
-              <feature.icon className="size-5 text-primary" />
-              <CardTitle className="text-lg">{feature.title}</CardTitle>
-              <CardDescription>{feature.description}</CardDescription>
-            </CardHeader>
-          </Card>
-        ))}
-      </section>
-
-      <section className="mt-16">
-        <h2 className="mb-6 text-2xl font-semibold">Learning modes</h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {LEARNING_MODES.map((mode) => (
-            <Link key={mode.slug} href={`/${mode.slug}`}>
-              <Card className="h-full transition-shadow hover:shadow-md">
-                <CardHeader>
-                  <CardTitle>{mode.label}</CardTitle>
-                  <CardContent className="px-0 pt-2 text-sm text-muted-foreground">
-                    Start practicing in {mode.label.toLowerCase()}.
-                  </CardContent>
-                </CardHeader>
-              </Card>
-            </Link>
-          ))}
+      <section className="mx-auto mt-16 max-w-7xl">
+        <div className="mb-6">
+          <h2 className="text-2xl font-semibold tracking-tight">Categories</h2>
+          <p className="mt-2 text-muted-foreground">
+            Browse interview topics across frontend, backend, and full-stack
+            development.
+          </p>
         </div>
+        <CategoryGrid categories={categories} />
       </section>
     </div>
   );
