@@ -222,6 +222,28 @@
   @apply text-primary underline underline-offset-4;
 }
 
+.rich-text-content table,
+.tiptap table {
+  @apply w-full border-collapse text-sm;
+}
+
+.rich-text-content th,
+.rich-text-content td,
+.tiptap th,
+.tiptap td {
+  @apply border border-border px-3 py-2 text-left align-top text-muted-foreground;
+}
+
+.rich-text-content th,
+.tiptap th {
+  @apply bg-muted/50 font-semibold text-foreground;
+}
+
+.rich-text-content tbody tr:nth-child(even) td,
+.tiptap tbody tr:nth-child(even) td {
+  @apply bg-muted/20;
+}
+
 .tiptap p.is-editor-empty:first-child::before {
   @apply pointer-events-none float-left h-0 text-muted-foreground;
   content: attr(data-placeholder);

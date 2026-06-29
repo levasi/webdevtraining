@@ -4,6 +4,10 @@ import type { ReactNode } from "react";
 import { useEffect } from "react";
 import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
+import { Table } from "@tiptap/extension-table";
+import { TableCell } from "@tiptap/extension-table-cell";
+import { TableHeader } from "@tiptap/extension-table-header";
+import { TableRow } from "@tiptap/extension-table-row";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import {
@@ -14,8 +18,11 @@ import {
   Link2,
   List,
   ListOrdered,
+  Plus,
   Quote,
   Strikethrough,
+  Table2,
+  Trash2,
   Unlink,
 } from "lucide-react";
 
@@ -82,6 +89,10 @@ export function RichTextEditor({
         },
       }),
       Placeholder.configure({ placeholder }),
+      Table.configure({ resizable: false }),
+      TableRow,
+      TableHeader,
+      TableCell,
     ],
     content: value,
     editorProps: {
@@ -218,6 +229,36 @@ export function RichTextEditor({
         >
           <Unlink className="size-4" />
         </ToolbarButton>
+        <span className="mx-1 hidden h-5 w-px bg-border sm:block" aria-hidden />
+        <ToolbarButton
+          label="Insert table"
+          active={editor.isActive("table")}
+          onClick={() =>
+            editor
+              .chain()
+              .focus()
+              .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+              .run()
+          }
+        >
+          <Table2 className="size-4" />
+        </ToolbarButton>
+        {editor.isActive("table") ? (
+          <>
+            <ToolbarButton
+              label="Add row below"
+              onClick={() => editor.chain().focus().addRowAfter().run()}
+            >
+              <Plus className="size-4" />
+            </ToolbarButton>
+            <ToolbarButton
+              label="Delete table"
+              onClick={() => editor.chain().focus().deleteTable().run()}
+            >
+              <Trash2 className="size-4" />
+            </ToolbarButton>
+          </>
+        ) : null}
       </div>
       <EditorContent editor={editor} />
     </div>

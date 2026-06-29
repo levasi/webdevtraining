@@ -17,6 +17,17 @@ describe("rich-text helpers", () => {
     expect(html).not.toContain("img");
   });
 
+  it("preserves safe table markup", () => {
+    const html = sanitizeRichText(
+      "<table><thead><tr><th>A</th><th>B</th></tr></thead><tbody><tr><td>1</td><td>2</td></tr></tbody></table>",
+    );
+
+    expect(html).toContain("<table");
+    expect(html).toContain("<th");
+    expect(html).toContain("<td");
+    expect(html).toContain("A");
+  });
+
   it("detects empty rich text", () => {
     expect(isRichTextEmpty("<p></p>")).toBe(true);
     expect(isRichTextEmpty("<p><br></p>")).toBe(true);

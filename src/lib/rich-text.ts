@@ -17,8 +17,14 @@ const SANITIZE_OPTIONS = {
     "a",
     "h2",
     "h3",
+    "table",
+    "thead",
+    "tbody",
+    "tr",
+    "th",
+    "td",
   ],
-  ALLOWED_ATTR: ["href", "target", "rel"],
+  ALLOWED_ATTR: ["href", "target", "rel", "colspan", "rowspan"],
 };
 
 export function sanitizeRichText(html: string): string {
