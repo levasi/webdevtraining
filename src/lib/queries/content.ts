@@ -61,6 +61,20 @@ export const getCategories = cache(async (): Promise<CategorySummary[]> =>
   })(),
 );
 
+async function fetchQuestionFormCategoryOptions() {
+  return db.category.findMany({
+    orderBy: { sortOrder: "asc" },
+    select: { id: true, name: true },
+  });
+}
+
+export const getQuestionFormCategoryOptions = cache(async () =>
+  unstable_cache(fetchQuestionFormCategoryOptions, ["question-form-categories"], {
+    revalidate: CATEGORY_REVALIDATE_SECONDS,
+    tags: ["categories"],
+  })(),
+);
+
 export const getCategoryBySlug = cache(async (slug: string) =>
   unstable_cache(
     () => fetchCategoryBySlug(slug),

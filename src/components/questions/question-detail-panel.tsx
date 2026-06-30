@@ -4,7 +4,7 @@ import { memo, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Pencil } from "lucide-react";
 
-import { updateQuestion } from "@/actions/admin/questions";
+import { updateQuestion, getQuestionFormCategories } from "@/actions/admin/questions";
 import { RichTextEditor } from "@/components/editor/rich-text-editor";
 import { DeleteQuestionButton } from "@/components/questions/delete-question-button";
 import { QuestionAnswersList } from "@/components/questions/question-answers-list";
@@ -15,7 +15,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { DIFFICULTY_LABELS } from "@/lib/constants";
+import { loadQuestionFormCategories } from "@/lib/question-form-categories-cache";
 import { getQuestionAnswerPreview } from "@/lib/questions/answer-preview";
 import { isRichTextEmpty } from "@/lib/rich-text";
 import { highlightSearchMatches } from "@/lib/search-highlight";
@@ -76,6 +84,11 @@ export const QuestionDetailPanel = memo(function QuestionDetailPanel({
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(question.title);
   const [content, setContent] = useState(question.content);
+  const [categoryId, setCategoryId] = useState(question.category.id);
+  const [categories, setCategories] = useState<
+    Array<{ id: string; name: string }>
+  >([]);
+  const [loadingCategories, setLoadingCategories] = useState(false);
   const [editableAnswers, setEditableAnswers] = useState<EditableAnswer[]>(() =>
     getEditableAnswers(question),
   );
@@ -91,10 +104,40 @@ export const QuestionDetailPanel = memo(function QuestionDetailPanel({
     setDisplayQuestion(question);
     setTitle(question.title);
     setContent(question.content);
+    setCategoryId(question.category.id);
     setEditableAnswers(getEditableAnswers(question));
     setEditing(false);
     setError(null);
   }, [question]);
+
+  useEffect(() => {
+    if (!editing || !canEdit) {
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadCategories() {
+      setLoadingCategories(true);
+      const result = await loadQuestionFormCategories(getQuestionFormCategories);
+
+      if (cancelled) {
+        return;
+      }
+
+      setLoadingCategories(false);
+
+      if (result.categories) {
+        setCategories(result.categories);
+      }
+    }
+
+    void loadCategories();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [editing, canEdit]);
 
   function handleQuestionChange(updatedQuestion: QuestionWithAnswers) {
     setDisplayQuestion(updatedQuestion);
@@ -104,6 +147,7 @@ export const QuestionDetailPanel = memo(function QuestionDetailPanel({
   function resetDraft() {
     setTitle(displayQuestion.title);
     setContent(displayQuestion.content);
+    setCategoryId(displayQuestion.category.id);
     setEditableAnswers(getEditableAnswers(displayQuestion));
     setError(null);
   }
@@ -142,6 +186,7 @@ export const QuestionDetailPanel = memo(function QuestionDetailPanel({
 
     const result = await updateQuestion({
       questionId: displayQuestion.id,
+      categoryId,
       title,
       content,
       answers,
@@ -158,6 +203,7 @@ export const QuestionDetailPanel = memo(function QuestionDetailPanel({
       ...displayQuestion,
       title,
       content,
+      category: result.data.category,
       answers: displayQuestion.answers.map((answer) => {
         const edited = editableAnswers.find((item) => item.id === answer.id);
         return edited ? { ...answer, content: edited.content } : answer;
@@ -227,9 +273,11 @@ export const QuestionDetailPanel = memo(function QuestionDetailPanel({
         {showCategory && (
           <Badge variant="outline">{displayQuestion.category.name}</Badge>
         )}
-        <Badge variant="secondary">
-          {displayQuestion.type.replace("_", " ")}
-        </Badge>
+        {displayQuestion.type !== "EXPLANATION" ? (
+          <Badge variant="secondary">
+            {displayQuestion.type.replace("_", " ")}
+          </Badge>
+        ) : null}
       </div>
       <div className="flex flex-wrap items-center gap-2">
         {actionButtons}
@@ -252,6 +300,39 @@ export const QuestionDetailPanel = memo(function QuestionDetailPanel({
       {editing ? (
         <form onSubmit={handleSave} className="space-y-6">
           {badgeRow}
+
+          <div className="space-y-2">
+            <Label htmlFor={`question-category-${displayQuestion.id}`}>
+              Category
+            </Label>
+            <Select
+              value={categoryId}
+              items={categories.map((category) => ({
+                value: category.id,
+                label: category.name,
+              }))}
+              onValueChange={(value) => value && setCategoryId(value)}
+              disabled={loadingCategories || categories.length === 0}
+            >
+              <SelectTrigger
+                id={`question-category-${displayQuestion.id}`}
+                className="w-full"
+              >
+                <SelectValue
+                  placeholder={
+                    loadingCategories ? "Loading categories..." : "Select category"
+                  }
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
           <div className="space-y-2">
             <Label htmlFor={`question-sidebar-label-${displayQuestion.id}`}>

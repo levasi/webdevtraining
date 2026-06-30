@@ -15,6 +15,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  getCachedQuestionFormCategories,
+  loadQuestionFormCategories,
+  type QuestionFormCategory,
+} from "@/lib/question-form-categories-cache";
 
 const CreateQuestionForm = dynamic(
   () =>
@@ -31,20 +36,29 @@ const CreateQuestionForm = dynamic(
   },
 );
 
-type CategoryOption = {
-  id: string;
-  name: string;
-};
-
-export function AddQuestionDialog() {
+export function AddQuestionDialog({
+  defaultCategoryId,
+}: {
+  defaultCategoryId?: string;
+} = {}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [categories, setCategories] = useState<CategoryOption[]>([]);
+  const [categories, setCategories] = useState<QuestionFormCategory[]>(
+    () => getCachedQuestionFormCategories() ?? [],
+  );
   const [loadingCategories, setLoadingCategories] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) {
+      return;
+    }
+
+    const cached = getCachedQuestionFormCategories();
+    if (cached) {
+      setCategories(cached);
+      setLoadingCategories(false);
+      setLoadError(null);
       return;
     }
 
@@ -54,7 +68,7 @@ export function AddQuestionDialog() {
       setLoadingCategories(true);
       setLoadError(null);
 
-      const result = await getQuestionFormCategories();
+      const result = await loadQuestionFormCategories(getQuestionFormCategories);
 
       if (cancelled) {
         return;
@@ -62,12 +76,12 @@ export function AddQuestionDialog() {
 
       setLoadingCategories(false);
 
-      if (!result.success) {
-        setLoadError(result.error);
+      if (result.error || !result.categories) {
+        setLoadError(result.error ?? "Failed to load categories");
         return;
       }
 
-      setCategories(result.data);
+      setCategories(result.categories);
     }
 
     void loadCategories();
@@ -78,7 +92,6 @@ export function AddQuestionDialog() {
   }, [open]);
 
   function handleSuccess() {
-    setOpen(false);
     router.refresh();
   }
 
@@ -104,7 +117,13 @@ export function AddQuestionDialog() {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
+        <div
+          className={
+            !loadingCategories && !loadError && categories.length > 0
+              ? "flex min-h-0 flex-1 flex-col overflow-hidden"
+              : "min-h-0 flex-1 overflow-y-auto px-6 py-5"
+          }
+        >
           {loadingCategories ? (
             <p className="py-12 text-center text-sm text-muted-foreground">
               Loading categories...
@@ -117,7 +136,9 @@ export function AddQuestionDialog() {
             </p>
           ) : (
             <CreateQuestionForm
+              key={defaultCategoryId ?? "default"}
               categories={categories}
+              defaultCategoryId={defaultCategoryId}
               onSuccess={handleSuccess}
               onCancel={() => setOpen(false)}
               plain

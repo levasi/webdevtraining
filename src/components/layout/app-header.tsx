@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { BookOpen, Bookmark, LayoutDashboard, Library, Menu } from "lucide-react";
 
-import { AddQuestionDialog } from "@/components/layout/add-question-dialog";
 import { ButtonLink } from "@/components/ui/button-link";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,7 +29,6 @@ const navItems = [
 function HeaderAuthActions() {
   const { data: session, isPending } = useSession();
   const user = session?.user;
-  const isAdmin = user?.role === "ADMIN";
 
   if (isPending) {
     return <Skeleton className="size-8 rounded-full" />;
@@ -65,7 +63,6 @@ function HeaderAuthActions() {
 
   return (
     <>
-      {isAdmin ? <AddQuestionDialog /> : null}
       <DropdownMenu>
         <DropdownMenuTrigger
           render={

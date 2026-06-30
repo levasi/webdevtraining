@@ -42,6 +42,7 @@ type CategoryOption = {
 
 type CreateQuestionFormProps = {
   categories: CategoryOption[];
+  defaultCategoryId?: string;
   onSuccess?: () => void;
   onCancel?: () => void;
   plain?: boolean;
@@ -74,23 +75,18 @@ function FormSection({
   title,
   description,
   children,
-  action,
 }: {
   title: string;
   description?: string;
   children: ReactNode;
-  action?: ReactNode;
 }) {
   return (
     <section className="space-y-4">
-      <div className="flex items-start justify-between gap-4">
-        <div className="space-y-1">
-          <h3 className="text-sm font-medium text-foreground">{title}</h3>
-          {description ? (
-            <p className="text-sm text-muted-foreground">{description}</p>
-          ) : null}
-        </div>
-        {action}
+      <div className="space-y-1">
+        <h3 className="text-sm font-medium text-foreground">{title}</h3>
+        {description ? (
+          <p className="text-sm text-muted-foreground">{description}</p>
+        ) : null}
       </div>
       {children}
     </section>
@@ -125,24 +121,59 @@ function NativeSelect({
   );
 }
 
+function resolveInitialCategoryId(
+  categories: CategoryOption[],
+  defaultCategoryId?: string,
+) {
+  if (
+    defaultCategoryId &&
+    categories.some((category) => category.id === defaultCategoryId)
+  ) {
+    return defaultCategoryId;
+  }
+
+  return categories[0]?.id ?? "";
+}
+
+function defaultTagsForCategory(
+  categories: CategoryOption[],
+  categoryId: string,
+) {
+  if (!categoryId) {
+    return "";
+  }
+
+  return categories.find((category) => category.id === categoryId)?.name ?? "";
+}
+
 export function CreateQuestionForm({
   categories,
+  defaultCategoryId,
   onSuccess,
   onCancel,
   plain = false,
 }: CreateQuestionFormProps) {
-  const [categoryId, setCategoryId] = useState(categories[0]?.id ?? "");
+  const [categoryId, setCategoryId] = useState(() =>
+    resolveInitialCategoryId(categories, defaultCategoryId),
+  );
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [difficulty, setDifficulty] =
     useState<CreateQuestionInput["difficulty"]>("BEGINNER");
   const [type, setType] =
     useState<CreateQuestionInput["type"]>("EXPLANATION");
-  const [tags, setTags] = useState("");
+  const [tags, setTags] = useState(() =>
+    defaultTagsForCategory(
+      categories,
+      resolveInitialCategoryId(categories, defaultCategoryId),
+    ),
+  );
   const [isPublished, setIsPublished] = useState(true);
   const [answers, setAnswers] = useState<AnswerField[]>(defaultExplanationAnswer);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [formResetKey, setFormResetKey] = useState(0);
 
   function updateAnswer(index: number, patch: Partial<AnswerField>) {
     setAnswers((current) =>
@@ -199,10 +230,23 @@ export function CreateQuestionForm({
     }
   }
 
+  function resetForm() {
+    setTitle("");
+    setContent("");
+    setDifficulty("BEGINNER");
+    setType("EXPLANATION");
+    setTags(defaultTagsForCategory(categories, categoryId));
+    setIsPublished(true);
+    setAnswers(defaultExplanationAnswer);
+    setError(null);
+    setFormResetKey((key) => key + 1);
+  }
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
     setError(null);
+    setSuccess(null);
 
     if (showExplanationRules && isRichTextEmpty(answers[0]?.content ?? "")) {
       setError("Write an explanation before saving.");
@@ -230,6 +274,14 @@ export function CreateQuestionForm({
 
     if (!result.success) {
       setError(result.error);
+      return;
+    }
+
+    if (plain && onSuccess) {
+      setSuccess("Question created successfully.");
+      resetForm();
+      onSuccess();
+      window.setTimeout(() => setSuccess(null), 2500);
       return;
     }
 
@@ -261,12 +313,12 @@ export function CreateQuestionForm({
           type="button"
           variant="outline"
           onClick={() => (onCancel ? onCancel() : navigateTo("/admin/questions"))}
-          disabled={loading}
+          disabled={loading || Boolean(success)}
         >
           Cancel
         </Button>
       ) : null}
-      <Button type="submit" disabled={loading}>
+      <Button type="submit" disabled={loading || Boolean(success)}>
         {loading ? "Creating..." : "Create question"}
       </Button>
       {!plain ? (
@@ -433,6 +485,7 @@ export function CreateQuestionForm({
       ) : null}
       {showExplanationRules ? (
         <RichTextEditor
+          key={`explanation-answer-${formResetKey}`}
           id="explanation-answer"
           value={answer.content}
           onChange={(html) => updateAnswer(index, { content: html })}
@@ -466,8 +519,11 @@ export function CreateQuestionForm({
 
   if (plain) {
     return (
-      <form onSubmit={handleSubmit} className="space-y-8">
-        <FormSection title="Details">
+      <form
+        onSubmit={handleSubmit}
+        className="flex min-h-0 flex-1 flex-col overflow-hidden"
+      >
+        <div className="min-h-0 flex-1 space-y-8 overflow-y-auto px-6 py-5">
           <div className="space-y-4">
             {metadataFields}
             <div className="space-y-2">
@@ -510,32 +566,42 @@ export function CreateQuestionForm({
               </label>
             </div>
           </div>
-        </FormSection>
 
-        <Separator />
+          <Separator />
 
-        <FormSection
-          title={showExplanationRules ? "Explanation" : "Answers"}
-          description={answerHelpText}
-          action={
-            showAnswerControls ? (
-              <Button type="button" variant="outline" size="sm" onClick={addAnswer}>
-                <Plus className="size-4" />
-                Add answer
-              </Button>
-            ) : null
-          }
-        >
-          <div className="space-y-3">{answerFields}</div>
-        </FormSection>
+          <FormSection
+            title={showExplanationRules ? "Explanation" : "Answers"}
+            description={answerHelpText}
+          >
+            <div className="space-y-3">
+              {showAnswerControls ? (
+                <Button type="button" variant="outline" size="sm" onClick={addAnswer}>
+                  <Plus className="size-4" />
+                  Add answer
+                </Button>
+              ) : null}
+              {answerFields}
+            </div>
+          </FormSection>
+        </div>
 
-        {error ? (
-          <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
-            {error}
-          </p>
-        ) : null}
-
-        <div className="sticky bottom-0 -mx-6 bg-popover/95 px-6 py-4 backdrop-blur-sm">
+        <div className="shrink-0 border-t bg-popover/95 px-6 py-4 backdrop-blur-sm">
+          {error ? (
+            <p
+              className="mb-3 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive"
+              role="alert"
+            >
+              {error}
+            </p>
+          ) : null}
+          {success ? (
+            <p
+              className="mb-3 rounded-lg bg-green-500/10 px-3 py-2 text-sm text-green-700 dark:text-green-400"
+              role="status"
+            >
+              {success}
+            </p>
+          ) : null}
           {actions}
         </div>
       </form>

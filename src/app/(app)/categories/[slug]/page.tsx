@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 
 import { CategoryContent } from "@/components/categories/category-content";
+import { CategoryPageHeader } from "@/components/categories/category-page-header";
 import { auth } from "@/lib/auth";
 import { getCategoryBySlug } from "@/lib/queries/content";
 import { getReadLaterQuestionIds } from "@/lib/queries/bookmarks";
@@ -41,9 +42,11 @@ export default async function CategoryDetailPage({ params }: PageProps) {
 
   return (
     <div className="w-full px-2 py-8 sm:px-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">{category.name}</h1>
-      </div>
+      <CategoryPageHeader
+        title={category.name}
+        categoryId={category.id}
+        isAdmin={isAdmin}
+      />
 
       <CategoryContent
         category={{

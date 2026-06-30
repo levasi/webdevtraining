@@ -104,8 +104,10 @@ export function QuestionCard({
               {question.content}
             </CardDescription>
             <p className="text-xs text-muted-foreground">
-              {question.answers.length} answers ·{" "}
-              {question.type.replace("_", " ")}
+              {question.answers.length} answers
+              {question.type !== "EXPLANATION"
+                ? ` · ${question.type.replace("_", " ")}`
+                : null}
             </p>
           </div>
         </QuestionAnswerHover>

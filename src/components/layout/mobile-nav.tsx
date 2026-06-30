@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { BookOpen, Bookmark, ChevronLeft, ChevronRight, LayoutDashboard, Library } from "lucide-react";
 
-import { AddQuestionDialog } from "@/components/layout/add-question-dialog";
 import { QuestionCompletionCheckbox } from "@/components/questions/question-completion-checkbox";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -58,7 +57,6 @@ export function MobileNav({ open, onClose }: MobileNavProps) {
   const pathname = usePathname();
   const [locationHash, setLocationHash] = useState("");
   const { data: session } = useSession();
-  const isAdmin = session?.user?.role === "ADMIN";
 
   const [view, setView] = useState<MobileNavView>("root");
   const [categories, setCategories] = useState<MobileNavCategory[]>([]);
@@ -396,12 +394,6 @@ export function MobileNav({ open, onClose }: MobileNavProps) {
             </div>
           ) : null}
         </div>
-
-        {isAdmin ? (
-          <div className="shrink-0 border-t p-4">
-            <AddQuestionDialog />
-          </div>
-        ) : null}
       </nav>
     </div>
   );

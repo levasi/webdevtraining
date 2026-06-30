@@ -5,6 +5,7 @@ import { revalidatePath, updateTag } from "next/cache";
 
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { getQuestionFormCategoryOptions } from "@/lib/queries/content";
 import { normalizeQuestionText } from "@/lib/questions/dedup";
 import {
   createQuestionSchema,
@@ -40,10 +41,7 @@ export async function getQuestionFormCategories(): Promise<
   try {
     await requireAdmin();
 
-    const categories = await db.category.findMany({
-      orderBy: { sortOrder: "asc" },
-      select: { id: true, name: true },
-    });
+    const categories = await getQuestionFormCategoryOptions();
 
     return { success: true, data: categories };
   } catch (error) {
@@ -114,7 +112,12 @@ export async function createQuestion(
 
 export async function updateQuestion(
   input: unknown,
-): Promise<ActionResult<{ id: string }>> {
+): Promise<
+  ActionResult<{
+    id: string;
+    category: { id: string; name: string; slug: string };
+  }>
+> {
   try {
     await requireAdmin();
     const data = updateQuestionSchema.parse(input);
@@ -132,11 +135,20 @@ export async function updateQuestion(
       return { success: false, error: "Question not found." };
     }
 
+    const category = await db.category.findUnique({
+      where: { id: data.categoryId },
+      select: { id: true, name: true, slug: true },
+    });
+
+    if (!category) {
+      return { success: false, error: "Category not found." };
+    }
+
     const normalizedTitle = normalizeQuestionText(data.title);
     const normalizedContent = normalizeQuestionText(data.content);
 
     const categoryQuestions = await db.question.findMany({
-      where: { categoryId: existing.categoryId },
+      where: { categoryId: data.categoryId },
       select: { id: true, title: true, content: true },
     });
 
@@ -182,7 +194,11 @@ export async function updateQuestion(
     await db.$transaction([
       db.question.update({
         where: { id: data.questionId },
-        data: { title: data.title, content: data.content },
+        data: {
+          categoryId: data.categoryId,
+          title: data.title,
+          content: data.content,
+        },
       }),
       ...data.answers.map((answer) =>
         db.answer.update({
@@ -195,10 +211,14 @@ export async function updateQuestion(
     revalidatePath("/admin/questions");
     revalidatePath("/categories");
     revalidatePath(`/categories/${existing.category.slug}`);
+    if (category.slug !== existing.category.slug) {
+      revalidatePath(`/categories/${category.slug}`);
+      updateTag(`category-${category.slug}`);
+    }
     updateTag("categories");
     updateTag(`category-${existing.category.slug}`);
 
-    return { success: true, data: { id: data.questionId } };
+    return { success: true, data: { id: data.questionId, category } };
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Failed to update question";

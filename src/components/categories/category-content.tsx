@@ -311,12 +311,23 @@ export function CategoryContent({
     : null;
 
   function handleQuestionChange(updatedQuestion: QuestionWithAnswers) {
-    setCategoryState((current) => ({
-      ...current,
-      questions: current.questions.map((question) =>
-        question.id === updatedQuestion.id ? updatedQuestion : question,
-      ),
-    }));
+    setCategoryState((current) => {
+      if (updatedQuestion.category.id !== current.id) {
+        return {
+          ...current,
+          questions: current.questions.filter(
+            (question) => question.id !== updatedQuestion.id,
+          ),
+        };
+      }
+
+      return {
+        ...current,
+        questions: current.questions.map((question) =>
+          question.id === updatedQuestion.id ? updatedQuestion : question,
+        ),
+      };
+    });
   }
 
   function handleQuestionDeleted(questionId: string) {
