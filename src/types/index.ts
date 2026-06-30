@@ -12,6 +12,13 @@ export type QuestionWithAnswers = Question & {
   category: Pick<Category, "id" | "name" | "slug">;
 };
 
+export type CategoryAnswerMeta = Pick<Answer, "id" | "sortOrder" | "isCorrect">;
+
+export type CategoryQuestionSummary = Question & {
+  answers: CategoryAnswerMeta[];
+  category: Pick<Category, "id" | "name" | "slug">;
+};
+
 export type ArticleWithCategory = Article & {
   category: Pick<Category, "id" | "name" | "slug">;
 };

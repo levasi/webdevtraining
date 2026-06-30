@@ -1,15 +1,16 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 
-import { QuestionDetailPanel } from "@/components/questions/question-detail-panel";
+import { LazyQuestionDetailPanel } from "@/components/questions/lazy-question-detail-panel";
 import { Input } from "@/components/ui/input";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 import { getQuestionIdFromHash, questionElementId, scrollToQuestion } from "@/lib/question-hash";
 import { cn, wrapLongTextClass } from "@/lib/utils";
-import type { QuestionWithAnswers } from "@/types";
+import type { CategoryQuestionSummary, QuestionWithAnswers } from "@/types";
 
 type MobileQuestionFeedProps = {
-  questions: QuestionWithAnswers[];
+  questions: CategoryQuestionSummary[];
   searchQuery: string;
   onSearchChange: (value: string) => void;
   completedIds: Set<string>;
@@ -19,6 +20,79 @@ type MobileQuestionFeedProps = {
   emptyMessage?: string;
   canEdit?: boolean;
 };
+
+type MobileQuestionCardProps = {
+  question: CategoryQuestionSummary;
+  searchQuery: string;
+  completedIds: Set<string>;
+  onCompletionChange: (questionId: string, completed: boolean) => void;
+  onQuestionChange?: (question: QuestionWithAnswers) => void;
+  onQuestionDeleted?: (questionId: string) => void;
+  canEdit?: boolean;
+};
+
+function MobileQuestionCard({
+  question,
+  searchQuery,
+  completedIds,
+  onCompletionChange,
+  onQuestionChange,
+  onQuestionDeleted,
+  canEdit,
+}: MobileQuestionCardProps) {
+  const ref = useRef<HTMLElement | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "240px 0px" },
+    );
+
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [question.id]);
+
+  return (
+    <article
+      ref={ref}
+      id={questionElementId(question.id)}
+      className={cn(
+        "scroll-mt-20 space-y-4 bg-card border-t border-t-border py-4",
+        wrapLongTextClass,
+      )}
+    >
+      {isVisible ? (
+        <LazyQuestionDetailPanel
+          question={question}
+          showCategory={false}
+          titleAs="h2"
+          searchQuery={searchQuery}
+          isCompleted={completedIds.has(question.id)}
+          onCompletionChange={onCompletionChange}
+          onQuestionChange={onQuestionChange}
+          onQuestionDeleted={onQuestionDeleted}
+          canEdit={canEdit}
+        />
+      ) : (
+        <div className="space-y-3 px-1" aria-hidden="true">
+          <div className="h-6 w-3/4 animate-pulse rounded bg-muted" />
+          <div className="h-20 animate-pulse rounded-lg bg-muted/60" />
+        </div>
+      )}
+    </article>
+  );
+}
 
 export function MobileQuestionFeed({
   questions,
@@ -31,7 +105,13 @@ export function MobileQuestionFeed({
   emptyMessage = "No questions match the current filter.",
   canEdit = false,
 }: MobileQuestionFeedProps) {
+  const isMobile = useIsMobile();
+
   useEffect(() => {
+    if (!isMobile) {
+      return;
+    }
+
     function scrollToHashQuestion() {
       const questionId = getQuestionIdFromHash(window.location.hash);
       if (!questionId) {
@@ -44,7 +124,11 @@ export function MobileQuestionFeed({
     scrollToHashQuestion();
     window.addEventListener("hashchange", scrollToHashQuestion);
     return () => window.removeEventListener("hashchange", scrollToHashQuestion);
-  }, [questions]);
+  }, [questions, isMobile]);
+
+  if (!isMobile) {
+    return null;
+  }
 
   return (
     <div className={cn("space-y-4 lg:hidden", wrapLongTextClass)}>
@@ -61,26 +145,16 @@ export function MobileQuestionFeed({
       ) : (
         <div className="space-y-6" aria-label="Questions in category">
           {questions.map((question) => (
-            <article
+            <MobileQuestionCard
               key={question.id}
-              id={questionElementId(question.id)}
-              className={cn(
-                "scroll-mt-20 space-y-4 bg-card border-t border-t-border py-4",
-                wrapLongTextClass,
-              )}
-            >
-              <QuestionDetailPanel
-                question={question}
-                showCategory={false}
-                titleAs="h2"
-                searchQuery={searchQuery}
-                isCompleted={completedIds.has(question.id)}
-                onCompletionChange={onCompletionChange}
-                onQuestionChange={onQuestionChange}
-                onQuestionDeleted={onQuestionDeleted}
-                canEdit={canEdit}
-              />
-            </article>
+              question={question}
+              searchQuery={searchQuery}
+              completedIds={completedIds}
+              onCompletionChange={onCompletionChange}
+              onQuestionChange={onQuestionChange}
+              onQuestionDeleted={onQuestionDeleted}
+              canEdit={canEdit}
+            />
           ))}
         </div>
       )}

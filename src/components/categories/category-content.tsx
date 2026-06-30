@@ -8,9 +8,9 @@ import { ChallengeDetailPanel } from "@/components/challenges/challenge-detail-p
 import { ContentSidebar } from "@/components/layout/content-sidebar";
 import { SidebarDetailLayout } from "@/components/layout/sidebar-detail-layout";
 import { QuestionCompletionCheckbox } from "@/components/questions/question-completion-checkbox";
+import { LazyQuestionDetailPanel } from "@/components/questions/lazy-question-detail-panel";
 import { MobileQuestionFeed } from "@/components/questions/mobile-question-feed";
-import { QuestionDetailPanel } from "@/components/questions/question-detail-panel";
-import { QuizQuestionPlayer } from "@/components/quiz/quiz-question-player";
+import { LazyQuizQuestionPlayer } from "@/components/quiz/lazy-quiz-question-player";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
@@ -30,13 +30,10 @@ import {
   type CategorySortOption,
   sortCategoryItems,
 } from "@/lib/questions/sort";
-import type { Article, Challenge, Question, Answer, Category } from "@/generated/prisma/client";
-import type { DifficultyFilter } from "@/types";
+import type { Article, Challenge } from "@/generated/prisma/client";
+import type { CategoryQuestionSummary, DifficultyFilter, QuestionWithAnswers } from "@/types";
 
-type CategoryQuestion = Question & {
-  answers: Answer[];
-  category: Pick<Category, "id" | "name" | "slug">;
-};
+type CategoryQuestion = CategoryQuestionSummary;
 
 type CategoryTab = "questions" | "challenges" | "quizzes" | "articles";
 
@@ -101,7 +98,6 @@ function questionMatchesSearch(
     question.title,
     question.content,
     ...question.tags,
-    ...question.answers.map((answer) => answer.content),
   ]
     .filter(Boolean)
     .join(" ")
@@ -309,7 +305,7 @@ export function CategoryContent({
     }
     : null;
 
-  function handleQuestionChange(updatedQuestion: CategoryQuestion) {
+  function handleQuestionChange(updatedQuestion: QuestionWithAnswers) {
     setCategoryState((current) => ({
       ...current,
       questions: current.questions.map((question) =>
@@ -486,7 +482,7 @@ export function CategoryContent({
             >
               {selectedQuestion ? (
                 <div className="p-4 sm:p-6">
-                  <QuestionDetailPanel
+                  <LazyQuestionDetailPanel
                     question={selectedQuestion}
                     showCategory={false}
                     titleAs="h1"
@@ -567,7 +563,7 @@ export function CategoryContent({
           >
             {selectedQuizQuestion ? (
               <div className="p-4 sm:p-6">
-                <QuizQuestionPlayer
+                <LazyQuizQuestionPlayer
                   question={selectedQuizQuestion}
                   showBackLink={false}
                 />

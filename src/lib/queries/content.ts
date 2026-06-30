@@ -34,7 +34,10 @@ async function fetchCategoryBySlug(slug: string) {
       questions: {
         where: { isPublished: true },
         include: {
-          answers: { orderBy: { sortOrder: "asc" } },
+          answers: {
+            orderBy: { sortOrder: "asc" },
+            select: { id: true, sortOrder: true, isCorrect: true },
+          },
           category: { select: { id: true, name: true, slug: true } },
         },
         orderBy: [{ difficulty: "asc" }, { title: "asc" }],

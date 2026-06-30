@@ -1,12 +1,10 @@
-import type { QuestionWithAnswers } from "@/types";
-
 export function isQuizEligibleQuestion(
-  question: Pick<QuestionWithAnswers, "answers">,
+  question: { answers: Array<{ id: string }> },
 ) {
   return question.answers.length > 0;
 }
 
-export function filterQuizEligibleQuestions<T extends Pick<QuestionWithAnswers, "answers">>(
+export function filterQuizEligibleQuestions<T extends { answers: Array<{ id: string }> }>(
   questions: T[],
 ) {
   return questions.filter(isQuizEligibleQuestion);
