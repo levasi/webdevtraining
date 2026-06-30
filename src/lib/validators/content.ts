@@ -82,6 +82,7 @@ export const createQuestionSchema = z
 export const updateQuestionSchema = z.object({
   questionId: z.string().min(1),
   title: z.string().min(3).max(200),
+  content: z.string().min(1),
   answers: z
     .array(
       z.object({

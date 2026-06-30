@@ -40,6 +40,8 @@ export async function toggleBookmark(
 
   if (existing) {
     await db.bookmark.delete({ where: { id: existing.id } });
+    revalidatePath("/read-later");
+    revalidatePath("/categories", "layout");
     return { success: true, data: { bookmarked: false } };
   }
 
@@ -50,6 +52,8 @@ export async function toggleBookmark(
     },
   });
 
+  revalidatePath("/read-later");
+  revalidatePath("/categories", "layout");
   return { success: true, data: { bookmarked: true } };
 }
 

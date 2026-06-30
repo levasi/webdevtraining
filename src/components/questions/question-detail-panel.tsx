@@ -9,6 +9,7 @@ import { RichTextEditor } from "@/components/editor/rich-text-editor";
 import { DeleteQuestionButton } from "@/components/questions/delete-question-button";
 import { QuestionAnswersList } from "@/components/questions/question-answers-list";
 import { QuestionCompletionCheckbox } from "@/components/questions/question-completion-checkbox";
+import { QuestionReadLaterButton } from "@/components/questions/question-read-later-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,6 +36,8 @@ type QuestionDetailPanelProps = {
   searchQuery?: string;
   isCompleted?: boolean;
   onCompletionChange?: (questionId: string, completed: boolean) => void;
+  isReadLater?: boolean;
+  onReadLaterChange?: (questionId: string, readLater: boolean) => void;
   canEdit?: boolean;
   onQuestionDeleted?: (questionId: string) => void;
 };
@@ -62,6 +65,8 @@ export const QuestionDetailPanel = memo(function QuestionDetailPanel({
   searchQuery = "",
   isCompleted = false,
   onCompletionChange,
+  isReadLater = false,
+  onReadLaterChange,
   canEdit = false,
   onQuestionDeleted,
 }: QuestionDetailPanelProps) {
@@ -70,6 +75,7 @@ export const QuestionDetailPanel = memo(function QuestionDetailPanel({
   const [displayQuestion, setDisplayQuestion] = useState(question);
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(question.title);
+  const [content, setContent] = useState(question.content);
   const [editableAnswers, setEditableAnswers] = useState<EditableAnswer[]>(() =>
     getEditableAnswers(question),
   );
@@ -84,6 +90,7 @@ export const QuestionDetailPanel = memo(function QuestionDetailPanel({
   useEffect(() => {
     setDisplayQuestion(question);
     setTitle(question.title);
+    setContent(question.content);
     setEditableAnswers(getEditableAnswers(question));
     setEditing(false);
     setError(null);
@@ -96,6 +103,7 @@ export const QuestionDetailPanel = memo(function QuestionDetailPanel({
 
   function resetDraft() {
     setTitle(displayQuestion.title);
+    setContent(displayQuestion.content);
     setEditableAnswers(getEditableAnswers(displayQuestion));
     setError(null);
   }
@@ -135,6 +143,7 @@ export const QuestionDetailPanel = memo(function QuestionDetailPanel({
     const result = await updateQuestion({
       questionId: displayQuestion.id,
       title,
+      content,
       answers,
     });
 
@@ -148,6 +157,7 @@ export const QuestionDetailPanel = memo(function QuestionDetailPanel({
     const updatedQuestion: QuestionWithAnswers = {
       ...displayQuestion,
       title,
+      content,
       answers: displayQuestion.answers.map((answer) => {
         const edited = editableAnswers.find((item) => item.id === answer.id);
         return edited ? { ...answer, content: edited.content } : answer;
@@ -159,37 +169,113 @@ export const QuestionDetailPanel = memo(function QuestionDetailPanel({
     router.refresh();
   }
 
-  return (
-    <div className={cn("space-y-6", wrapLongTextClass)}>
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge variant={difficultyVariant[displayQuestion.difficulty]}>
-            {DIFFICULTY_LABELS[displayQuestion.difficulty]}
-          </Badge>
-          {showCategory && (
-            <Badge variant="outline">{displayQuestion.category.name}</Badge>
-          )}
-          <Badge variant="secondary">
-            {displayQuestion.type.replace("_", " ")}
-          </Badge>
-        </div>
+  const actionButtons = canEdit ? (
+    <div className="flex flex-wrap items-center gap-2">
+      {editing ? (
+        <>
+          <Button type="submit" size="sm" disabled={loading}>
+            {loading ? "Saving..." : "Save"}
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              resetDraft();
+              setEditing(false);
+            }}
+            disabled={loading}
+          >
+            Cancel
+          </Button>
+          <DeleteQuestionButton
+            questionId={displayQuestion.id}
+            questionTitle={displayQuestion.title}
+            onDeleted={onQuestionDeleted}
+          />
+        </>
+      ) : (
+        <>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              resetDraft();
+              setEditing(true);
+            }}
+          >
+            <Pencil className="size-3.5" />
+            Edit
+          </Button>
+          <DeleteQuestionButton
+            questionId={displayQuestion.id}
+            questionTitle={displayQuestion.title}
+            onDeleted={onQuestionDeleted}
+          />
+        </>
+      )}
+    </div>
+  ) : null;
+
+  const badgeRow = (
+    <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center gap-2">
+        <Badge variant={difficultyVariant[displayQuestion.difficulty]}>
+          {DIFFICULTY_LABELS[displayQuestion.difficulty]}
+        </Badge>
+        {showCategory && (
+          <Badge variant="outline">{displayQuestion.category.name}</Badge>
+        )}
+        <Badge variant="secondary">
+          {displayQuestion.type.replace("_", " ")}
+        </Badge>
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        {actionButtons}
+        <QuestionReadLaterButton
+          questionId={displayQuestion.id}
+          isReadLater={isReadLater}
+          onReadLaterChange={onReadLaterChange}
+        />
         <QuestionCompletionCheckbox
           questionId={displayQuestion.id}
           isCompleted={isCompleted}
           onCompletionChange={onCompletionChange}
         />
       </div>
+    </div>
+  );
 
+  return (
+    <div className={cn("space-y-6", wrapLongTextClass)}>
       {editing ? (
         <form onSubmit={handleSave} className="space-y-6">
+          {badgeRow}
+
           <div className="space-y-2">
-            <Label htmlFor={`question-title-${displayQuestion.id}`}>
-              Question name
+            <Label htmlFor={`question-sidebar-label-${displayQuestion.id}`}>
+              Sidebar label
             </Label>
             <Input
-              id={`question-title-${displayQuestion.id}`}
+              id={`question-sidebar-label-${displayQuestion.id}`}
               value={title}
               onChange={(event) => setTitle(event.target.value)}
+              placeholder="Short label shown in the category list"
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor={`question-content-${displayQuestion.id}`}>
+              Full question
+            </Label>
+            <Textarea
+              id={`question-content-${displayQuestion.id}`}
+              value={content}
+              onChange={(event) => setContent(event.target.value)}
+              className="min-h-24 resize-y"
+              placeholder="The full question shown in the detail panel"
               required
             />
           </div>
@@ -227,58 +313,19 @@ export const QuestionDetailPanel = memo(function QuestionDetailPanel({
           </div>
 
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
-
-          <div className="flex flex-wrap gap-2">
-            <Button type="submit" size="sm" disabled={loading}>
-              {loading ? "Saving..." : "Save changes"}
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                resetDraft();
-                setEditing(false);
-              }}
-              disabled={loading}
-            >
-              Cancel
-            </Button>
-          </div>
         </form>
       ) : (
         <>
-          <div className="flex items-start justify-between gap-3">
-            <TitleTag
-              className={cn(
-                "text-2xl font-bold leading-snug tracking-tight",
-                wrapLongTextClass,
-              )}
-            >
-              {highlightSearchMatches(displayQuestion.title, searchQuery)}
-            </TitleTag>
-            {canEdit ? (
-              <div className="flex shrink-0 gap-2">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    resetDraft();
-                    setEditing(true);
-                  }}
-                >
-                  <Pencil className="size-3.5" />
-                  Edit
-                </Button>
-                <DeleteQuestionButton
-                  questionId={displayQuestion.id}
-                  questionTitle={displayQuestion.title}
-                  onDeleted={onQuestionDeleted}
-                />
-              </div>
-            ) : null}
-          </div>
+          {badgeRow}
+
+          <TitleTag
+            className={cn(
+              "text-2xl font-bold leading-snug tracking-tight",
+              wrapLongTextClass,
+            )}
+          >
+            {highlightSearchMatches(displayQuestion.content, searchQuery)}
+          </TitleTag>
 
           <QuestionAnswersList
             question={displayQuestion}

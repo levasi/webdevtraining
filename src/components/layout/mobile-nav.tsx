@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { BookOpen, ChevronLeft, ChevronRight, LayoutDashboard, Library } from "lucide-react";
+import { BookOpen, Bookmark, ChevronLeft, ChevronRight, LayoutDashboard, Library } from "lucide-react";
 
 import { AddQuestionDialog } from "@/components/layout/add-question-dialog";
 import { QuestionCompletionCheckbox } from "@/components/questions/question-completion-checkbox";
@@ -19,6 +19,7 @@ import {
 import { cn } from "@/lib/utils";
 
 const navItems = [
+  { href: "/read-later", label: "Read later", icon: Bookmark },
   { href: "/completed", label: "Completed", icon: LayoutDashboard },
   { href: "/resources", label: "Resources", icon: Library },
 ] as const;

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { CategoryContent } from "@/components/categories/category-content";
 import { auth } from "@/lib/auth";
 import { getCategoryBySlug } from "@/lib/queries/content";
+import { getReadLaterQuestionIds } from "@/lib/queries/bookmarks";
 import { getCompletedQuestionIds } from "@/lib/queries/progress";
 
 type PageProps = {
@@ -29,9 +30,12 @@ export default async function CategoryDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  const completedQuestionIds = session?.user
-    ? await getCompletedQuestionIds(session.user.id)
-    : [];
+  const [completedQuestionIds, readLaterQuestionIds] = session?.user
+    ? await Promise.all([
+        getCompletedQuestionIds(session.user.id),
+        getReadLaterQuestionIds(session.user.id),
+      ])
+    : [[], []];
 
   const isAdmin = session?.user?.role === "ADMIN";
 
@@ -51,6 +55,7 @@ export default async function CategoryDetailPage({ params }: PageProps) {
           articles: category.articles,
         }}
         completedQuestionIds={completedQuestionIds}
+        readLaterQuestionIds={readLaterQuestionIds}
         isAdmin={isAdmin}
       />
     </div>

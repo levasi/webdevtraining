@@ -2,7 +2,7 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 
 import { db } from "@/lib/db";
-import { getAppUrl, getGoogleOAuthRedirectUri } from "@/lib/app-url";
+import { getAppUrl } from "@/lib/app-url";
 
 const appUrl = getAppUrl();
 
@@ -33,7 +33,6 @@ export const auth = betterAuth({
           google: {
             clientId: googleClientId,
             clientSecret: googleClientSecret,
-            redirectURI: getGoogleOAuthRedirectUri(appUrl),
             prompt: "select_account",
             overrideUserInfoOnSignIn: true,
             mapProfileToUser: (profile) => ({

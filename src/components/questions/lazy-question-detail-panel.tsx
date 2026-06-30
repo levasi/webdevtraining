@@ -12,6 +12,8 @@ type LazyQuestionDetailPanelProps = {
   searchQuery?: string;
   isCompleted?: boolean;
   onCompletionChange?: (questionId: string, completed: boolean) => void;
+  isReadLater?: boolean;
+  onReadLaterChange?: (questionId: string, readLater: boolean) => void;
   canEdit?: boolean;
   onQuestionDeleted?: (questionId: string) => void;
 };

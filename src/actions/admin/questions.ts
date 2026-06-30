@@ -133,22 +133,36 @@ export async function updateQuestion(
     }
 
     const normalizedTitle = normalizeQuestionText(data.title);
+    const normalizedContent = normalizeQuestionText(data.content);
 
     const categoryQuestions = await db.question.findMany({
       where: { categoryId: existing.categoryId },
-      select: { id: true, title: true },
+      select: { id: true, title: true, content: true },
     });
 
-    const duplicate = categoryQuestions.find(
+    const duplicateTitle = categoryQuestions.find(
       (question) =>
         question.id !== data.questionId &&
         normalizeQuestionText(question.title) === normalizedTitle,
     );
 
-    if (duplicate) {
+    if (duplicateTitle) {
       return {
         success: false,
-        error: `Another question in this category already uses the title "${duplicate.title}".`,
+        error: `Another question in this category already uses the sidebar label "${duplicateTitle.title}".`,
+      };
+    }
+
+    const duplicateContent = categoryQuestions.find(
+      (question) =>
+        question.id !== data.questionId &&
+        normalizeQuestionText(question.content) === normalizedContent,
+    );
+
+    if (duplicateContent) {
+      return {
+        success: false,
+        error: `Another question in this category already uses this full question text.`,
       };
     }
 
@@ -168,7 +182,7 @@ export async function updateQuestion(
     await db.$transaction([
       db.question.update({
         where: { id: data.questionId },
-        data: { title: data.title },
+        data: { title: data.title, content: data.content },
       }),
       ...data.answers.map((answer) =>
         db.answer.update({

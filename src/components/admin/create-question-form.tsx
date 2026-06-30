@@ -471,7 +471,7 @@ export function CreateQuestionForm({
           <div className="space-y-4">
             {metadataFields}
             <div className="space-y-2">
-              <Label htmlFor="title">Title</Label>
+              <Label htmlFor="title">Sidebar label</Label>
               <Input
                 id="title"
                 value={title}
@@ -481,7 +481,7 @@ export function CreateQuestionForm({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="content">Question prompt</Label>
+              <Label htmlFor="content">Full question</Label>
               <Textarea
                 id="content"
                 value={content}
@@ -555,7 +555,7 @@ export function CreateQuestionForm({
           {metadataFields}
 
           <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="title">Title</Label>
+            <Label htmlFor="title">Sidebar label</Label>
             <Input
               id="title"
               value={title}
@@ -566,7 +566,7 @@ export function CreateQuestionForm({
           </div>
 
           <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="content">Question prompt</Label>
+            <Label htmlFor="content">Full question</Label>
             <Textarea
               id="content"
               value={content}

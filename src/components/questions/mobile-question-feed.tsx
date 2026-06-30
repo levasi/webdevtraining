@@ -14,7 +14,9 @@ type MobileQuestionFeedProps = {
   searchQuery: string;
   onSearchChange: (value: string) => void;
   completedIds: Set<string>;
+  readLaterIds: Set<string>;
   onCompletionChange: (questionId: string, completed: boolean) => void;
+  onReadLaterChange: (questionId: string, readLater: boolean) => void;
   onQuestionChange?: (question: QuestionWithAnswers) => void;
   onQuestionDeleted?: (questionId: string) => void;
   emptyMessage?: string;
@@ -25,7 +27,9 @@ type MobileQuestionCardProps = {
   question: CategoryQuestionSummary;
   searchQuery: string;
   completedIds: Set<string>;
+  readLaterIds: Set<string>;
   onCompletionChange: (questionId: string, completed: boolean) => void;
+  onReadLaterChange: (questionId: string, readLater: boolean) => void;
   onQuestionChange?: (question: QuestionWithAnswers) => void;
   onQuestionDeleted?: (questionId: string) => void;
   canEdit?: boolean;
@@ -35,7 +39,9 @@ function MobileQuestionCard({
   question,
   searchQuery,
   completedIds,
+  readLaterIds,
   onCompletionChange,
+  onReadLaterChange,
   onQuestionChange,
   onQuestionDeleted,
   canEdit,
@@ -79,7 +85,9 @@ function MobileQuestionCard({
           titleAs="h2"
           searchQuery={searchQuery}
           isCompleted={completedIds.has(question.id)}
+          isReadLater={readLaterIds.has(question.id)}
           onCompletionChange={onCompletionChange}
+          onReadLaterChange={onReadLaterChange}
           onQuestionChange={onQuestionChange}
           onQuestionDeleted={onQuestionDeleted}
           canEdit={canEdit}
@@ -99,7 +107,9 @@ export function MobileQuestionFeed({
   searchQuery,
   onSearchChange,
   completedIds,
+  readLaterIds,
   onCompletionChange,
+  onReadLaterChange,
   onQuestionChange,
   onQuestionDeleted,
   emptyMessage = "No questions match the current filter.",
@@ -150,7 +160,9 @@ export function MobileQuestionFeed({
               question={question}
               searchQuery={searchQuery}
               completedIds={completedIds}
+              readLaterIds={readLaterIds}
               onCompletionChange={onCompletionChange}
+              onReadLaterChange={onReadLaterChange}
               onQuestionChange={onQuestionChange}
               onQuestionDeleted={onQuestionDeleted}
               canEdit={canEdit}

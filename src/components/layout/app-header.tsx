@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { BookOpen, LayoutDashboard, Library, Menu } from "lucide-react";
+import { BookOpen, Bookmark, LayoutDashboard, Library, Menu } from "lucide-react";
 
 import { AddQuestionDialog } from "@/components/layout/add-question-dialog";
 import { ButtonLink } from "@/components/ui/button-link";
@@ -22,6 +22,7 @@ import { CategoriesNavFlyout } from "@/components/layout/categories-nav-flyout";
 
 const navItems = [
   { href: "/categories", label: "Categories", icon: BookOpen },
+  { href: "/read-later", label: "Read later", icon: Bookmark },
   { href: "/completed", label: "Completed", icon: LayoutDashboard },
   { href: "/resources", label: "Resources", icon: Library },
 ];

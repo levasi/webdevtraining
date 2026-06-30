@@ -47,6 +47,7 @@ type CategoryContentProps = {
     articles: Article[];
   };
   completedQuestionIds?: string[];
+  readLaterQuestionIds?: string[];
   isAdmin?: boolean;
 };
 
@@ -154,6 +155,7 @@ function EmptyDetail({ message }: { message: string }) {
 export function CategoryContent({
   category,
   completedQuestionIds = [],
+  readLaterQuestionIds = [],
   isAdmin = false,
 }: CategoryContentProps) {
   const [categoryState, setCategoryState] = useState(category);
@@ -176,6 +178,9 @@ export function CategoryContent({
   const [showCompleted, setShowCompleted] = useState(true);
   const [completedIds, setCompletedIds] = useState(
     () => new Set(completedQuestionIds),
+  );
+  const [readLaterIds, setReadLaterIds] = useState(
+    () => new Set(readLaterQuestionIds),
   );
 
   const quizQuestions = useMemo(
@@ -323,6 +328,18 @@ export function CategoryContent({
     }));
   }
 
+  function handleReadLaterChange(questionId: string, readLater: boolean) {
+    setReadLaterIds((current) => {
+      const next = new Set(current);
+      if (readLater) {
+        next.add(questionId);
+      } else {
+        next.delete(questionId);
+      }
+      return next;
+    });
+  }
+
   function handleCompletionChange(questionId: string, completed: boolean) {
     setCompletedIds((current) => {
       const next = new Set(current);
@@ -425,7 +442,9 @@ export function CategoryContent({
             searchQuery={questionSearch}
             onSearchChange={setQuestionSearch}
             completedIds={completedIds}
+            readLaterIds={readLaterIds}
             onCompletionChange={handleCompletionChange}
+            onReadLaterChange={handleReadLaterChange}
             onQuestionChange={handleQuestionChange}
             onQuestionDeleted={handleQuestionDeleted}
             canEdit={isAdmin}
@@ -488,7 +507,9 @@ export function CategoryContent({
                     titleAs="h1"
                     searchQuery={questionSearch}
                     isCompleted={completedIds.has(selectedQuestion.id)}
+                    isReadLater={readLaterIds.has(selectedQuestion.id)}
                     onCompletionChange={handleCompletionChange}
+                    onReadLaterChange={handleReadLaterChange}
                     onQuestionChange={handleQuestionChange}
                     onQuestionDeleted={handleQuestionDeleted}
                     canEdit={isAdmin}
