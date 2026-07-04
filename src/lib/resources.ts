@@ -151,6 +151,22 @@ export const RESOURCE_TIERS: ResourceTier[] = [
       },
     ],
   },
+  {
+    id: "tier-5",
+    tier: 5,
+    title: "Graphics & Creative Coding",
+    resources: [
+      {
+        id: "book-of-shaders",
+        name: "The Book of Shaders",
+        url: "https://thebookofshaders.com/",
+        description: "Gentle step-by-step guide to fragment shaders and GLSL.",
+        highlights: [
+          "Great for learning shaders, GLSL, and creative/generative graphics",
+        ],
+      },
+    ],
+  },
 ];
 
 export const THIRTY_DAY_STUDY_PLAN = [
