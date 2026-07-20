@@ -7,6 +7,7 @@ import {
   vueQuestions,
   nuxtQuestions,
 } from "./frontend-frameworks";
+import { vueChallengeLabQuestions } from "./vue-challenge-lab";
 import { htmlQuestions, cssQuestions } from "./html-css";
 import {
   nodejsQuestions,
@@ -34,6 +35,7 @@ export const ALL_SEED_QUESTIONS: SeedQuestion[] = [
   ...reactInterviewGuideQuestions,
   ...nextjsQuestions,
   ...vueQuestions,
+  ...vueChallengeLabQuestions,
   ...nuxtQuestions,
   ...htmlQuestions,
   ...cssQuestions,
