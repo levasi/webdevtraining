@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 
 import { auth } from "@/lib/auth";
+import { getChallengeRunnerMeta } from "@/lib/challenges/challenge-meta";
 import { db } from "@/lib/db";
 import { runChallengeSchema } from "@/lib/validators/content";
 import type { TestCase, TestResult } from "@/types";
@@ -33,6 +34,8 @@ export async function POST(
   const parsed = runChallengeSchema.safeParse({
     challengeId: id,
     code: body.code,
+    clientPassed: body.clientPassed,
+    clientResults: body.clientResults,
   });
 
   if (!parsed.success) {
@@ -51,27 +54,48 @@ export async function POST(
   }
 
   const testCases = challenge.testCases as TestCase[];
-  const results: TestResult[] = testCases.map((testCase) => {
-    try {
-      const actualOutput = runUserCode(parsed.data.code, testCase.input);
-      const passed =
-        JSON.stringify(actualOutput) === JSON.stringify(testCase.expectedOutput);
+  const meta = getChallengeRunnerMeta(testCases);
 
-      return {
-        ...testCase,
-        passed,
-        actualOutput,
-      };
-    } catch (error) {
-      return {
-        ...testCase,
-        passed: false,
-        error: error instanceof Error ? error.message : "Runtime error",
-      };
+  let results: TestResult[];
+  let passed: boolean;
+
+  if (meta.runner === "vue") {
+    if (!parsed.data.clientResults) {
+      return NextResponse.json(
+        { error: "Vue challenges require clientResults from the browser suite" },
+        { status: 400 },
+      );
     }
-  });
+    results = parsed.data.clientResults;
+    passed =
+      parsed.data.clientPassed ??
+      (results.length > 0 && results.every((result) => result.passed));
+  } else {
+    const gradeCases = testCases.filter(
+      (testCase) => testCase.description !== "__meta__",
+    );
+    results = gradeCases.map((testCase) => {
+      try {
+        const actualOutput = runUserCode(parsed.data.code, testCase.input);
+        const casePassed =
+          JSON.stringify(actualOutput) ===
+          JSON.stringify(testCase.expectedOutput);
 
-  const passed = results.every((result) => result.passed);
+        return {
+          ...testCase,
+          passed: casePassed,
+          actualOutput,
+        };
+      } catch (error) {
+        return {
+          ...testCase,
+          passed: false,
+          error: error instanceof Error ? error.message : "Runtime error",
+        };
+      }
+    });
+    passed = results.every((result) => result.passed);
+  }
 
   await db.challengeAttempt.create({
     data: {

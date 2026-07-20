@@ -118,6 +118,20 @@ export const createChallengeSchema = z.object({
 export const runChallengeSchema = z.object({
   challengeId: z.string().min(1),
   code: z.string().min(1),
+  /** Client-side suite results (Vue / browser runners). */
+  clientPassed: z.boolean().optional(),
+  clientResults: z
+    .array(
+      z.object({
+        input: z.unknown(),
+        expectedOutput: z.unknown(),
+        description: z.string().optional(),
+        passed: z.boolean(),
+        actualOutput: z.unknown().optional(),
+        error: z.string().optional(),
+      }),
+    )
+    .optional(),
 });
 
 export const checkQuestionAnswerSchema = z.object({

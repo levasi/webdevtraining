@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { BeforeMount, OnMount } from "@monaco-editor/react";
 import Editor, { loader } from "@monaco-editor/react";
+import type { editor as MonacoEditor } from "monaco-editor";
 
 import { cn } from "@/lib/utils";
 
@@ -14,6 +15,7 @@ loader.config({
 });
 
 const CHALLENGE_THEME = "challenge-lab";
+const MIN_HEIGHT = 220;
 
 type CodeEditorProps = {
   value: string;
@@ -21,6 +23,7 @@ type CodeEditorProps = {
   language?: string;
   path?: string;
   className?: string;
+  minHeight?: number;
 };
 
 export function CodeEditor({
@@ -29,9 +32,35 @@ export function CodeEditor({
   language = "javascript",
   path = "challenge.js",
   className,
+  minHeight = MIN_HEIGHT,
 }: CodeEditorProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const editorRef = useRef<MonacoEditor.IStandaloneCodeEditor | null>(null);
+  const ignoreLayoutRef = useRef(false);
+  const minHeightRef = useRef(minHeight);
   const [ready, setReady] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [height, setHeight] = useState(minHeight);
+
+  minHeightRef.current = minHeight;
+
+  const syncHeight = (editor: MonacoEditor.IStandaloneCodeEditor) => {
+    if (ignoreLayoutRef.current) return;
+
+    const contentHeight = editor.getContentHeight();
+    const next = Math.max(minHeightRef.current, contentHeight);
+    const width =
+      containerRef.current?.clientWidth || editor.getLayoutInfo().width;
+
+    setHeight(next);
+
+    ignoreLayoutRef.current = true;
+    try {
+      editor.layout({ width, height: next });
+    } finally {
+      ignoreLayoutRef.current = false;
+    }
+  };
 
   const handleBeforeMount: BeforeMount = (monaco) => {
     monaco.editor.defineTheme(CHALLENGE_THEME, {
@@ -58,16 +87,35 @@ export function CodeEditor({
     setLoadError(null);
   };
 
-  const handleMount: OnMount = () => {
+  const handleMount: OnMount = (editor) => {
+    editorRef.current = editor;
     setReady(true);
+    syncHeight(editor);
+    editor.onDidContentSizeChange(() => syncHeight(editor));
   };
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const observer = new ResizeObserver(() => {
+      const editor = editorRef.current;
+      if (editor) syncHeight(editor);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const editor = editorRef.current;
+    if (editor) syncHeight(editor);
+  }, [value, minHeight]);
 
   return (
     <div
-      className={cn(
-        "relative min-h-[320px] w-full overflow-visible",
-        className,
-      )}
+      ref={containerRef}
+      className={cn("relative w-full overflow-hidden", className)}
+      style={{ height }}
     >
       {loadError ? (
         <p className="absolute inset-0 z-10 grid place-items-center p-4 text-center text-sm text-destructive">
@@ -80,7 +128,7 @@ export function CodeEditor({
       ) : null}
 
       <Editor
-        height="100%"
+        height={height}
         path={path}
         language={language}
         theme={CHALLENGE_THEME}
@@ -90,7 +138,7 @@ export function CodeEditor({
         onMount={handleMount}
         onChange={(next) => onChange(next ?? "")}
         options={{
-          automaticLayout: true,
+          automaticLayout: false,
           fontSize: 14,
           fontFamily:
             "var(--font-mono), IBM Plex Mono, ui-monospace, SFMono-Regular, Menlo, monospace",
@@ -101,13 +149,19 @@ export function CodeEditor({
           renderLineHighlight: "line",
           smoothScrolling: true,
           wordWrap: "on",
+          wrappingStrategy: "advanced",
           fixedOverflowWidgets: true,
+          overviewRulerLanes: 0,
+          hideCursorInOverviewRuler: true,
+          overviewRulerBorder: false,
           scrollbar: {
-            verticalScrollbarSize: 10,
+            vertical: "hidden",
+            horizontal: "auto",
+            alwaysConsumeMouseWheel: false,
+            verticalScrollbarSize: 0,
             horizontalScrollbarSize: 10,
           },
         }}
-        className="h-full min-h-[320px]"
       />
     </div>
   );

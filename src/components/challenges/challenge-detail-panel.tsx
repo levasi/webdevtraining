@@ -1,9 +1,24 @@
 "use client";
 
-import { CodePlayground } from "@/components/challenges/code-playground";
+import dynamic from "next/dynamic";
+
 import { ChallengeResolvedCheckbox } from "@/components/challenges/challenge-resolved-checkbox";
-import { DifficultyBadge } from "@/components/categories/category-grid";
 import type { ChallengeWithCategory, TestCase } from "@/types";
+
+const CodePlayground = dynamic(
+  () =>
+    import("@/components/challenges/code-playground").then(
+      (mod) => mod.CodePlayground,
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="grid min-h-[420px] place-items-center rounded-[10px] border border-border bg-card text-sm text-muted-foreground">
+        Loading playground…
+      </div>
+    ),
+  },
+);
 
 type ChallengeDetailPanelProps = {
   challenge: ChallengeWithCategory;
@@ -15,35 +30,18 @@ export function ChallengeDetailPanel({
   isResolved = false,
 }: ChallengeDetailPanelProps) {
   return (
-    <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
-        <div className="space-y-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <DifficultyBadge difficulty={challenge.difficulty} />
-            <span className="text-sm font-medium text-foreground/70">
-              {challenge.category.name}
-            </span>
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            {challenge.title}
-          </h1>
-          <p className="max-w-3xl leading-relaxed text-foreground/80">
-            {challenge.description}
-          </p>
-        </div>
+    <CodePlayground
+      challengeId={challenge.id}
+      starterCode={challenge.starterCode}
+      solutionCode={challenge.solutionCode}
+      hints={challenge.hints}
+      testCases={challenge.testCases as TestCase[]}
+      toolbarEnd={
         <ChallengeResolvedCheckbox
           challengeId={challenge.id}
           isResolved={isResolved}
         />
-      </div>
-
-      <CodePlayground
-        challengeId={challenge.id}
-        starterCode={challenge.starterCode}
-        solutionCode={challenge.solutionCode}
-        hints={challenge.hints}
-        testCases={challenge.testCases as TestCase[]}
-      />
-    </div>
+      }
+    />
   );
 }

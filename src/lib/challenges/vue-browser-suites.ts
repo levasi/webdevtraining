@@ -667,7 +667,7 @@ export const vueSfcSuites: Record<string, Suite> = {
         await add(wrapper, 'Gone')
         await wrapper.get('[data-testid="delete"]').trigger('click')
         assertEqual(wrapper.findAll('li[data-testid^="note-"]').length, 0)
-        assert(wrapper.get('[data-testid="empty"]').exists())
+        assert(wrapper.find('[data-testid="empty"]').exists())
       }),
     ]
   },

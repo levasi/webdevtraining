@@ -20,24 +20,37 @@ export function ChallengesBrowser({ challenges }: ChallengesBrowserProps) {
 
   if (challenges.length === 0) {
     return (
-      <p className="text-muted-foreground">No coding challenges are available yet.</p>
+      <p className="text-muted-foreground">
+        No coding challenges are available yet.
+      </p>
     );
   }
 
   return (
     <SidebarDetailLayout
       sidebar={
-        <ContentSidebar
-          ariaLabel="Coding challenges"
-          selectedId={selectedId}
-          onSelect={setSelectedId}
-          items={challenges.map((challenge) => ({
-            id: challenge.id,
-            title: challenge.title,
-            difficulty: challenge.difficulty,
-            subtitle: challenge.category.name,
-          }))}
-        />
+        <div className="flex h-full min-h-0 flex-col">
+          <div className="flex shrink-0 items-baseline justify-between gap-2 border-b border-border/70 bg-[#e7e0d2]/40 px-3.5 py-3">
+            <p className="text-[0.7rem] font-semibold tracking-[0.08em] text-muted-foreground uppercase">
+              Challenges
+            </p>
+            <p className="font-mono text-[0.7rem] text-muted-foreground/80">
+              {challenges.length}
+            </p>
+          </div>
+          <ContentSidebar
+            ariaLabel="Coding challenges"
+            selectedId={selectedId}
+            onSelect={setSelectedId}
+            items={challenges.map((challenge) => ({
+              id: challenge.id,
+              title: challenge.title,
+              difficulty: challenge.difficulty,
+              subtitle: challenge.category.name,
+              description: challenge.description,
+            }))}
+          />
+        </div>
       }
     >
       {selectedChallenge ? (

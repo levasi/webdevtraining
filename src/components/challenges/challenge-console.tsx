@@ -48,7 +48,7 @@ export function ChallengeConsole({
     <section
       aria-label="Console output"
       className={cn(
-        "flex min-h-[140px] max-h-[220px] flex-col border-t border-border bg-[#1c1915] text-[#e8e2d6]",
+        "flex min-h-0 flex-col border-t border-border bg-[#1c1915] text-[#e8e2d6]",
         className,
       )}
     >

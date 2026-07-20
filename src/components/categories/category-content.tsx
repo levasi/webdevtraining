@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
+import { AddQuestionDialog } from "@/components/layout/add-question-dialog";
 import { ArticleDetailPanel } from "@/components/articles/article-detail-panel";
 import { ChallengeDetailPanel } from "@/components/challenges/challenge-detail-panel";
 import { CategorySearchSidebar } from "@/components/categories/category-search-sidebar";
@@ -408,49 +409,88 @@ export function CategoryContent({
     });
   }
 
-  const filters = (
-    <div className="flex flex-col gap-3 rounded-xl border border-border/80 bg-card/80 p-3 shadow-sm sm:flex-row sm:flex-wrap sm:items-center">
-      <Select
-        value={difficultyFilter}
-        onValueChange={(value) => setDifficultyFilter(value as DifficultyFilter)}
-      >
-        <SelectTrigger className="w-full bg-background sm:w-48" aria-label="Filter by difficulty">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {difficultyFilters.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
-              {option.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+  const toolbar = (
+    <div className="relative flex flex-col gap-3 rounded-xl border border-border/80 bg-card/80 p-3 shadow-sm lg:flex-row lg:items-center lg:justify-between lg:gap-4">
+      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+        <h1 className="shrink-0 px-1 text-xl font-bold tracking-tight sm:text-2xl">
+          {categoryState.name}
+        </h1>
 
-      <Select
-        value={sort}
-        onValueChange={(value) => setSort(value as CategorySortOption)}
-      >
-        <SelectTrigger className="w-full bg-background sm:w-64" aria-label="Sort items">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {sortOptions.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
-              {option.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+        <Select
+          value={difficultyFilter}
+          onValueChange={(value) =>
+            setDifficultyFilter(value as DifficultyFilter)
+          }
+        >
+          <SelectTrigger
+            className="w-full bg-background sm:w-44"
+            aria-label="Filter by difficulty"
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {difficultyFilters.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-      {activeTab === "questions" ? (
-        <div className="flex items-center">
-          <Checkbox
-            variant="completed"
-            checked={showCompleted}
-            onCheckedChange={(checked) => setShowCompleted(checked === true)}
-            aria-label="Show completed"
-            title="Show completed"
-          />
+        <Select
+          value={sort}
+          onValueChange={(value) => setSort(value as CategorySortOption)}
+        >
+          <SelectTrigger
+            className="w-full bg-background sm:w-56"
+            aria-label="Sort items"
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {sortOptions.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {activeTab === "questions" ? (
+          <div className="flex items-center">
+            <Checkbox
+              variant="completed"
+              checked={showCompleted}
+              onCheckedChange={(checked) => setShowCompleted(checked === true)}
+              aria-label="Show completed"
+              title="Show completed"
+            />
+          </div>
+        ) : null}
+      </div>
+
+      {availableTabs.length > 1 ? (
+        <div className="flex justify-center lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">
+          <TabsList>
+            {hasQuestions ? (
+              <TabsTrigger value="questions">Questions</TabsTrigger>
+            ) : null}
+            {hasChallenges ? (
+              <TabsTrigger value="challenges">Challenges</TabsTrigger>
+            ) : null}
+            {hasArticles ? (
+              <TabsTrigger value="articles">Articles</TabsTrigger>
+            ) : null}
+            {hasQuizzes ? (
+              <TabsTrigger value="quizzes">Quizzes</TabsTrigger>
+            ) : null}
+          </TabsList>
+        </div>
+      ) : null}
+
+      {isAdmin ? (
+        <div className="flex shrink-0 items-center justify-end">
+          <AddQuestionDialog defaultCategoryId={categoryState.id} />
         </div>
       ) : null}
     </div>
@@ -470,26 +510,7 @@ export function CategoryContent({
       onValueChange={(value) => setActiveTab(value as CategoryTab)}
       className="gap-6"
     >
-      {availableTabs.length > 1 ? (
-        <div className="flex justify-center">
-          <TabsList>
-            {hasQuestions ? (
-              <TabsTrigger value="questions">Questions</TabsTrigger>
-            ) : null}
-            {hasChallenges ? (
-              <TabsTrigger value="challenges">Challenges</TabsTrigger>
-            ) : null}
-            {hasArticles ? (
-              <TabsTrigger value="articles">Articles</TabsTrigger>
-            ) : null}
-            {hasQuizzes ? (
-              <TabsTrigger value="quizzes">Quizzes</TabsTrigger>
-            ) : null}
-          </TabsList>
-        </div>
-      ) : null}
-
-      {filters}
+      {toolbar}
 
       {hasQuestions ? (
         <TabsContent value="questions" className="mt-0">
@@ -585,7 +606,7 @@ export function CategoryContent({
                   id: challenge.id,
                   title: challenge.title,
                   difficulty: challenge.difficulty,
-                  subtitle: "Coding challenge",
+                  description: challenge.description,
                 }))}
                 selectedId={selectedChallengeId}
                 onSelect={setSelectedChallengeId}

@@ -27,6 +27,14 @@ async function main() {
   let failed = 0;
 
   for (const challenge of ALL_CHALLENGES) {
+    const metaCase = challenge.testCases.find(
+      (testCase) => testCase.description === "__meta__",
+    );
+    const metaInput = metaCase?.input as { runner?: string } | undefined;
+    if (metaInput?.runner === "vue") {
+      continue;
+    }
+
     for (const [index, testCase] of challenge.testCases.entries()) {
       try {
         const fn = new Function(

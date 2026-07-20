@@ -18,7 +18,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </Suspense>
       <AppHeader onMenuClick={() => setSidebarOpen(true)} />
       <MobileNav open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <main className="min-w-0 flex-1 overflow-x-hidden">{children}</main>
+      {/* overflow-x-clip (not hidden) so position:sticky sidebars still work */}
+      <main className="min-w-0 flex-1 overflow-x-clip">{children}</main>
       <AppFooter />
     </>
   );
