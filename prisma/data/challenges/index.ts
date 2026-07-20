@@ -7,6 +7,8 @@ import { functionChallenges } from "./functions";
 import { asyncChallenges } from "./async";
 import { patternChallenges } from "./patterns";
 import { algorithmChallenges } from "./algorithms";
+import { challengeLabChallenges } from "./challenge-lab";
+import { challengeLabVueChallenges } from "./challenge-lab-vue";
 
 export const ALL_CHALLENGES: SeedChallenge[] = [
   ...stringChallenges,
@@ -17,4 +19,6 @@ export const ALL_CHALLENGES: SeedChallenge[] = [
   ...asyncChallenges,
   ...patternChallenges,
   ...algorithmChallenges,
+  ...challengeLabChallenges,
+  ...challengeLabVueChallenges,
 ];

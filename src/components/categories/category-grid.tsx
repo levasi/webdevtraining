@@ -46,5 +46,14 @@ export function DifficultyBadge({
 }: {
   difficulty: keyof typeof DIFFICULTY_LABELS;
 }) {
-  return <Badge variant="outline">{DIFFICULTY_LABELS[difficulty]}</Badge>;
+  const variant =
+    difficulty === "BEGINNER"
+      ? "secondary"
+      : difficulty === "INTERMEDIATE"
+        ? "default"
+        : "destructive";
+
+  return (
+    <Badge variant={variant}>{DIFFICULTY_LABELS[difficulty]}</Badge>
+  );
 }

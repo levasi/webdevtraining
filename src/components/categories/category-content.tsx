@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { ArticleDetailPanel } from "@/components/articles/article-detail-panel";
 import { ChallengeDetailPanel } from "@/components/challenges/challenge-detail-panel";
+import { CategorySearchSidebar } from "@/components/categories/category-search-sidebar";
 import { ContentSidebar } from "@/components/layout/content-sidebar";
 import { SidebarDetailLayout } from "@/components/layout/sidebar-detail-layout";
 import { QuestionCompletionCheckbox } from "@/components/questions/question-completion-checkbox";
@@ -12,7 +13,6 @@ import { LazyQuestionDetailPanel } from "@/components/questions/lazy-question-de
 import { MobileQuestionFeed } from "@/components/questions/mobile-question-feed";
 import { LazyQuizQuestionPlayer } from "@/components/quiz/lazy-quiz-question-player";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -107,6 +107,23 @@ function questionMatchesSearch(
   return terms.every((term) => haystack.includes(term));
 }
 
+function challengeMatchesSearch(
+  challenge: Challenge,
+  query: string,
+): boolean {
+  const terms = getSearchTerms(query);
+  if (terms.length === 0) {
+    return true;
+  }
+
+  const haystack = [challenge.title, challenge.description]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  return terms.every((term) => haystack.includes(term));
+}
+
 function getFirstAvailableTab(category: CategoryContentProps["category"]): CategoryTab {
   if (category.questions.length > 0) {
     return "questions";
@@ -166,6 +183,8 @@ export function CategoryContent({
 
   useEffect(() => {
     setQuestionSearch("");
+    setChallengeSearch("");
+    setQuizSearch("");
   }, [category.id]);
   const [activeTab, setActiveTab] = useState<CategoryTab>(() =>
     getFirstAvailableTab(categoryState),
@@ -175,6 +194,10 @@ export function CategoryContent({
   const [sort, setSort] = useState<CategorySortOption>("difficulty-asc");
   const [questionSearch, setQuestionSearch] = useState("");
   const debouncedQuestionSearch = useDebouncedValue(questionSearch, 250);
+  const [challengeSearch, setChallengeSearch] = useState("");
+  const debouncedChallengeSearch = useDebouncedValue(challengeSearch, 250);
+  const [quizSearch, setQuizSearch] = useState("");
+  const debouncedQuizSearch = useDebouncedValue(quizSearch, 250);
   const [showCompleted, setShowCompleted] = useState(true);
   const [completedIds, setCompletedIds] = useState(
     () => new Set(completedQuestionIds),
@@ -252,10 +275,32 @@ export function CategoryContent({
     return sortCategoryItems(items, sort);
   }, [categoryState.challenges, difficultyFilter, sort]);
 
+  const visibleChallenges = useMemo(() => {
+    const query = debouncedChallengeSearch.trim().toLowerCase();
+    if (!query) {
+      return filteredChallenges;
+    }
+
+    return filteredChallenges.filter((challenge) =>
+      challengeMatchesSearch(challenge, query),
+    );
+  }, [filteredChallenges, debouncedChallengeSearch]);
+
   const filteredQuizQuestions = useMemo(() => {
     const items = filterByDifficulty(quizQuestions, difficultyFilter);
     return sortCategoryItems(items, sort);
   }, [quizQuestions, difficultyFilter, sort]);
+
+  const visibleQuizQuestions = useMemo(() => {
+    const query = debouncedQuizSearch.trim().toLowerCase();
+    if (!query) {
+      return filteredQuizQuestions;
+    }
+
+    return filteredQuizQuestions.filter((question) =>
+      questionMatchesSearch(question, query),
+    );
+  }, [filteredQuizQuestions, debouncedQuizSearch]);
 
   const filteredArticles = useMemo(() => {
     const items = filterArticlesByDifficulty(categoryState.articles, difficultyFilter);
@@ -271,16 +316,16 @@ export function CategoryContent({
   const [selectedQuestionId, setSelectedQuestionId] =
     useSyncedSelection(visibleQuestions);
   const [selectedChallengeId, setSelectedChallengeId] =
-    useSyncedSelection(filteredChallenges);
+    useSyncedSelection(visibleChallenges);
   const [selectedQuizId, setSelectedQuizId] =
-    useSyncedSelection(filteredQuizQuestions);
+    useSyncedSelection(visibleQuizQuestions);
   const [selectedArticleId, setSelectedArticleId] =
     useSyncedSelection(filteredArticles);
 
   const selectedQuestion = visibleQuestions.find(
     (question) => question.id === selectedQuestionId,
   );
-  const selectedChallenge = filteredChallenges.find(
+  const selectedChallenge = visibleChallenges.find(
     (challenge) => challenge.id === selectedChallengeId,
   );
   const selectedChallengeWithCategory = selectedChallenge
@@ -293,7 +338,7 @@ export function CategoryContent({
       },
     }
     : null;
-  const selectedQuizQuestion = filteredQuizQuestions.find(
+  const selectedQuizQuestion = visibleQuizQuestions.find(
     (question) => question.id === selectedQuizId,
   );
   const selectedArticle = filteredArticles.find(
@@ -364,12 +409,12 @@ export function CategoryContent({
   }
 
   const filters = (
-    <div className="flex flex-col gap-3 p-3 sm:flex-row sm:flex-wrap sm:items-center">
+    <div className="flex flex-col gap-3 rounded-xl border border-border/80 bg-card/80 p-3 shadow-sm sm:flex-row sm:flex-wrap sm:items-center">
       <Select
         value={difficultyFilter}
         onValueChange={(value) => setDifficultyFilter(value as DifficultyFilter)}
       >
-        <SelectTrigger className="w-full sm:w-48" aria-label="Filter by difficulty">
+        <SelectTrigger className="w-full bg-background sm:w-48" aria-label="Filter by difficulty">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -385,7 +430,7 @@ export function CategoryContent({
         value={sort}
         onValueChange={(value) => setSort(value as CategorySortOption)}
       >
-        <SelectTrigger className="w-full sm:w-64" aria-label="Sort items">
+        <SelectTrigger className="w-full bg-background sm:w-64" aria-label="Sort items">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -471,43 +516,35 @@ export function CategoryContent({
           <div className="hidden lg:block">
             <SidebarDetailLayout
               sidebar={
-                <div className="flex min-h-0 flex-1 flex-col">
-                  <div className="shrink-0 border-b p-3">
-                    <Input
-                      type="search"
-                      value={questionSearch}
-                      onChange={(event) => setQuestionSearch(event.target.value)}
-                      placeholder="Search questions..."
-                      aria-label="Search questions"
-                    />
-                  </div>
-                  <ContentSidebar
-                    ariaLabel="Questions in category"
-                    searchQuery={questionSearch}
-                    items={visibleQuestions.map((question) => ({
-                      id: question.id,
-                      title: question.title,
-                      difficulty: question.difficulty,
-                      subtitle: `${question.answers.length} answers`,
-                      trailing: (
-                        <QuestionCompletionCheckbox
-                          questionId={question.id}
-                          isCompleted={completedIds.has(question.id)}
-                          onCompletionChange={handleCompletionChange}
-                        />
-                      ),
-                    }))}
-                    selectedId={selectedQuestionId}
-                    onSelect={setSelectedQuestionId}
-                    emptyMessage={
-                      filteredQuestions.length === 0
-                        ? "No questions match the current filter."
-                        : questionSearch.trim()
-                          ? "No questions match your search."
-                          : "No incomplete questions match the current filter. Check Show completed to review finished items."
-                    }
-                  />
-                </div>
+                <CategorySearchSidebar
+                  searchValue={questionSearch}
+                  onSearchChange={setQuestionSearch}
+                  searchPlaceholder="Search questions..."
+                  searchAriaLabel="Search questions"
+                  ariaLabel="Questions in category"
+                  items={visibleQuestions.map((question) => ({
+                    id: question.id,
+                    title: question.title,
+                    difficulty: question.difficulty,
+                    subtitle: `${question.answers.length} answers`,
+                    trailing: (
+                      <QuestionCompletionCheckbox
+                        questionId={question.id}
+                        isCompleted={completedIds.has(question.id)}
+                        onCompletionChange={handleCompletionChange}
+                      />
+                    ),
+                  }))}
+                  selectedId={selectedQuestionId}
+                  onSelect={setSelectedQuestionId}
+                  emptyMessage={
+                    filteredQuestions.length === 0
+                      ? "No questions match the current filter."
+                      : questionSearch.trim()
+                        ? "No questions match your search."
+                        : "No incomplete questions match the current filter. Check Show completed to review finished items."
+                  }
+                />
               }
             >
               {selectedQuestion ? (
@@ -538,9 +575,13 @@ export function CategoryContent({
         <TabsContent value="challenges" className="mt-0">
           <SidebarDetailLayout
             sidebar={
-              <ContentSidebar
+              <CategorySearchSidebar
+                searchValue={challengeSearch}
+                onSearchChange={setChallengeSearch}
+                searchPlaceholder="Search challenges..."
+                searchAriaLabel="Search challenges"
                 ariaLabel="Challenges in category"
-                items={filteredChallenges.map((challenge) => ({
+                items={visibleChallenges.map((challenge) => ({
                   id: challenge.id,
                   title: challenge.title,
                   difficulty: challenge.difficulty,
@@ -548,22 +589,22 @@ export function CategoryContent({
                 }))}
                 selectedId={selectedChallengeId}
                 onSelect={setSelectedChallengeId}
-                emptyMessage="No challenges match the current filter."
+                emptyMessage={
+                  filteredChallenges.length === 0
+                    ? "No challenges match the current filter."
+                    : challengeSearch.trim()
+                      ? "No challenges match your search."
+                      : "No challenges match the current filter."
+                }
               />
             }
           >
             {selectedChallengeWithCategory ? (
-              <>
-                <ChallengeDetailPanel challenge={selectedChallengeWithCategory} />
-                <div className="border-t px-4 pb-4 sm:px-6">
-                  <Link
-                    href={`/challenges/${selectedChallengeWithCategory.id}`}
-                    className="inline-block text-sm text-primary hover:underline"
-                  >
-                    Open full page →
-                  </Link>
-                </div>
-              </>
+              <div className="p-4 sm:p-6">
+                <ChallengeDetailPanel
+                  challenge={selectedChallengeWithCategory}
+                />
+              </div>
             ) : (
               <EmptyDetail message="Select a challenge from the list." />
             )}
@@ -575,9 +616,13 @@ export function CategoryContent({
         <TabsContent value="quizzes" className="mt-0">
           <SidebarDetailLayout
             sidebar={
-              <ContentSidebar
+              <CategorySearchSidebar
+                searchValue={quizSearch}
+                onSearchChange={setQuizSearch}
+                searchPlaceholder="Search quizzes..."
+                searchAriaLabel="Search quizzes"
                 ariaLabel="Quiz questions in category"
-                items={filteredQuizQuestions.map((question) => ({
+                items={visibleQuizQuestions.map((question) => ({
                   id: question.id,
                   title: question.title,
                   difficulty: question.difficulty,
@@ -588,7 +633,11 @@ export function CategoryContent({
                 emptyMessage={
                   quizQuestions.length === 0
                     ? "No quiz questions are available in this category yet."
-                    : "No quiz questions match the current filter."
+                    : filteredQuizQuestions.length === 0
+                      ? "No quiz questions match the current filter."
+                      : quizSearch.trim()
+                        ? "No quiz questions match your search."
+                        : "No quiz questions match the current filter."
                 }
               />
             }

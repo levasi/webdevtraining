@@ -12,7 +12,7 @@ import { CATEGORIES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 const navLinkClassName =
-  "rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground";
+  "rounded-md px-3 py-2 text-sm font-medium text-foreground/80 transition-colors hover:bg-muted hover:text-foreground";
 
 export function CategoriesNavFlyout() {
   return (

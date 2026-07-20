@@ -124,26 +124,24 @@
   }
   body {
     @apply text-foreground;
-    background:
-      radial-gradient(ellipse 80% 50% at 10% -10%, #d8efe9 0%, transparent 55%),
-      radial-gradient(ellipse 60% 40% at 100% 0%, #f0e0c8 0%, transparent 50%),
-      linear-gradient(180deg, #f3efe6 0%, #ebe4d6 100%);
     background-color: var(--background);
+    background-image: radial-gradient(
+      ellipse 70% 45vh at 0% 0%,
+      #d8efe9 0%,
+      transparent 60%
+    );
+    background-repeat: no-repeat;
+    background-attachment: fixed;
   }
   .dark body {
-    background:
-      radial-gradient(
-        ellipse 80% 50% at 10% -10%,
-        rgb(15 118 110 / 0.18) 0%,
-        transparent 55%
-      ),
-      radial-gradient(
-        ellipse 60% 40% at 100% 0%,
-        rgb(240 224 200 / 0.08) 0%,
-        transparent 50%
-      ),
-      linear-gradient(180deg, #1c1915 0%, #161410 100%);
     background-color: var(--background);
+    background-image: radial-gradient(
+      ellipse 70% 45vh at 0% 0%,
+      rgb(15 118 110 / 0.16) 0%,
+      transparent 60%
+    );
+    background-repeat: no-repeat;
+    background-attachment: fixed;
   }
   html {
     @apply font-sans;
@@ -278,4 +276,13 @@
 .tiptap p.is-editor-empty:first-child::before {
   @apply pointer-events-none float-left h-0 text-muted-foreground;
   content: attr(data-placeholder);
+}
+
+/* Monaco suggest/hover widgets — keep above sticky chrome */
+.monaco-editor .suggest-widget,
+.monaco-editor .parameter-hints-widget,
+.monaco-editor .monaco-hover,
+.editor-widget.suggest-details,
+.monaco-editor .suggest-details-container {
+  z-index: 40 !important;
 }

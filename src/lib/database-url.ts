@@ -78,15 +78,39 @@ export function getRuntimeDatabaseConnectionString(): string {
   return normalizePostgresConnectionString(databaseUrl);
 }
 
+function isLocalPostgresUrl(url: string): boolean {
+  try {
+    const { hostname } = new URL(url);
+    return (
+      hostname === "localhost" ||
+      hostname === "127.0.0.1" ||
+      hostname === "::1"
+    );
+  } catch {
+    return false;
+  }
+}
+
 /** Migrations and seed scripts: prefer direct/unpooled URLs when available. */
 export function getDirectDatabaseConnectionString(): string {
-  return (
-    firstPostgresUrl(
-      process.env.DATABASE_URL_UNPOOLED,
-      process.env.DIRECT_DATABASE_URL,
-      process.env.DATABASE_URL,
-    ) ?? getRuntimeDatabaseConnectionString()
+  const preferred = firstPostgresUrl(
+    process.env.DATABASE_URL_UNPOOLED,
+    process.env.DIRECT_DATABASE_URL,
+    process.env.DATABASE_URL,
   );
+
+  // Skip a stale local prisma/dev proxy when Neon (or another remote) is configured.
+  if (preferred && isLocalPostgresUrl(preferred)) {
+    const remote = firstPostgresUrl(
+      process.env.DATABASE_URL_UNPOOLED,
+      process.env.DATABASE_URL,
+    );
+    if (remote && !isLocalPostgresUrl(remote)) {
+      return remote;
+    }
+  }
+
+  return preferred ?? getRuntimeDatabaseConnectionString();
 }
 
 /** @deprecated Use getRuntimeDatabaseConnectionString or getDirectDatabaseConnectionString. */

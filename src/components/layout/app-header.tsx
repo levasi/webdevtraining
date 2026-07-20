@@ -133,7 +133,7 @@ export function AppHeader({ onMenuClick }: AppHeaderProps) {
                 key={item.href}
                 href={item.href}
                 prefetch={false}
-                className="rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                className="rounded-md px-3 py-2 text-sm font-medium text-foreground/80 transition-colors hover:bg-muted hover:text-foreground"
               >
                 {item.label}
               </Link>

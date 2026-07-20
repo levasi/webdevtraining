@@ -41,7 +41,9 @@ export function ChallengesBrowser({ challenges }: ChallengesBrowserProps) {
       }
     >
       {selectedChallenge ? (
-        <ChallengeDetailPanel challenge={selectedChallenge} />
+        <div className="p-4 sm:p-6">
+          <ChallengeDetailPanel challenge={selectedChallenge} />
+        </div>
       ) : (
         <div className="flex h-full min-h-48 items-center justify-center p-6 text-sm text-muted-foreground">
           Select a challenge from the list.

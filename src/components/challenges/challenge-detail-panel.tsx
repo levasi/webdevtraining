@@ -15,17 +15,19 @@ export function ChallengeDetailPanel({
   isResolved = false,
 }: ChallengeDetailPanelProps) {
   return (
-    <div className="space-y-6 p-4 sm:p-6">
+    <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-3">
           <div className="flex flex-wrap items-center gap-2">
             <DifficultyBadge difficulty={challenge.difficulty} />
-            <span className="text-sm text-muted-foreground">
+            <span className="text-sm font-medium text-foreground/70">
               {challenge.category.name}
             </span>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">{challenge.title}</h1>
-          <p className="max-w-3xl leading-relaxed text-muted-foreground">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            {challenge.title}
+          </h1>
+          <p className="max-w-3xl leading-relaxed text-foreground/80">
             {challenge.description}
           </p>
         </div>

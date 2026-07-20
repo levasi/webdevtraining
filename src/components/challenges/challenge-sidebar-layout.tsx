@@ -32,7 +32,9 @@ export function ChallengeSidebarLayout({
         />
       }
     >
-      <ChallengeDetailPanel challenge={challenge} isResolved={isResolved} />
+      <div className="p-4 sm:p-6">
+        <ChallengeDetailPanel challenge={challenge} isResolved={isResolved} />
+      </div>
     </SidebarDetailLayout>
   );
 }
