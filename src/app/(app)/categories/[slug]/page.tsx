@@ -5,7 +5,11 @@ import { CategoryContent } from "@/components/categories/category-content";
 import { auth } from "@/lib/auth";
 import { getCategoryBySlug } from "@/lib/queries/content";
 import { getReadLaterQuestionIds } from "@/lib/queries/bookmarks";
-import { getCompletedQuestionIds } from "@/lib/queries/progress";
+import {
+  getCompletedQuestionIds,
+  getCompletedQuizQuestionIds,
+  getResolvedChallengeIds,
+} from "@/lib/queries/progress";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -30,17 +34,24 @@ export default async function CategoryDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  const [completedQuestionIds, readLaterQuestionIds] = session?.user
+  const [
+    completedQuestionIds,
+    completedQuizQuestionIds,
+    resolvedChallengeIds,
+    readLaterQuestionIds,
+  ] = session?.user
     ? await Promise.all([
         getCompletedQuestionIds(session.user.id),
+        getCompletedQuizQuestionIds(session.user.id),
+        getResolvedChallengeIds(session.user.id),
         getReadLaterQuestionIds(session.user.id),
       ])
-    : [[], []];
+    : [[], [], [], []];
 
   const isAdmin = session?.user?.role === "ADMIN";
 
   return (
-    <div className="w-full px-2 py-8 sm:px-6">
+    <div className="w-full px-2 py-4 sm:px-6 sm:py-8">
       <CategoryContent
         category={{
           id: category.id,
@@ -51,6 +62,8 @@ export default async function CategoryDetailPage({ params }: PageProps) {
           articles: category.articles,
         }}
         completedQuestionIds={completedQuestionIds}
+        completedQuizQuestionIds={completedQuizQuestionIds}
+        resolvedChallengeIds={resolvedChallengeIds}
         readLaterQuestionIds={readLaterQuestionIds}
         isAdmin={isAdmin}
       />

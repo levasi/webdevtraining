@@ -7,6 +7,14 @@ import type { CategoryQuestionSummary, QuestionWithAnswers } from "@/types";
 
 type QuestionInput = CategoryQuestionSummary | QuestionWithAnswers;
 
+function isAbortError(error: unknown) {
+  return (
+    (error instanceof DOMException && error.name === "AbortError") ||
+    (error instanceof Error &&
+      (error.name === "AbortError" || /abort|cancel/i.test(error.message)))
+  );
+}
+
 export function useFullQuestion(question: QuestionInput) {
   const hasContent = questionHasAnswerContent(question);
   const [fullQuestion, setFullQuestion] = useState<QuestionWithAnswers | null>(
@@ -23,37 +31,38 @@ export function useFullQuestion(question: QuestionInput) {
       return;
     }
 
-    let cancelled = false;
+    const questionId = question.id;
+    const controller = new AbortController();
 
     async function loadQuestion() {
       setLoading(true);
       setError(null);
 
       try {
-        const response = await fetch(`/api/questions/${question.id}`);
+        const response = await fetch(`/api/questions/${questionId}`, {
+          signal: controller.signal,
+        });
 
         if (!response.ok) {
           throw new Error("Failed to load question");
         }
 
         const data = (await response.json()) as QuestionWithAnswers;
-
-        if (!cancelled) {
-          setFullQuestion(data);
-          setLoading(false);
+        setFullQuestion(data);
+        setLoading(false);
+      } catch (err) {
+        if (controller.signal.aborted || isAbortError(err)) {
+          return;
         }
-      } catch {
-        if (!cancelled) {
-          setError("Could not load this question. Please try again.");
-          setLoading(false);
-        }
+        setError("Could not load this question. Please try again.");
+        setLoading(false);
       }
     }
 
     void loadQuestion();
 
     return () => {
-      cancelled = true;
+      controller.abort();
     };
   }, [question]);
 

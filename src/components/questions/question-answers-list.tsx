@@ -36,7 +36,7 @@ export function QuestionAnswersList({
           <li
             key={answer}
             className={cn(
-              "rounded-lg border border-border/80 bg-background px-4 py-3 text-sm leading-relaxed text-foreground",
+              "rounded-lg border border-border/80 bg-[#faf7f0] px-3 py-2.5 text-sm leading-relaxed text-foreground sm:bg-background sm:px-4 sm:py-3",
               question.type === "EXPLANATION" ? "" : "whitespace-pre-wrap",
               wrapLongTextClass,
             )}

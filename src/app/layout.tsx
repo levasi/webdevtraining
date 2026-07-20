@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/next";
 
 import { fontVariables } from "@/lib/app-fonts";
@@ -17,6 +17,13 @@ export const metadata: Metadata = {
     "Practice frontend, backend, and full-stack interview questions with flashcards, quizzes, and coding challenges.",
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#f5f1e8",
+};
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -30,7 +37,7 @@ export default async function RootLayout({
       data-main-font={mainFont}
       className={`${fontVariables} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col overflow-x-clip">
         <QueryProvider>
           <AppShell>{children}</AppShell>
         </QueryProvider>

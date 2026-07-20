@@ -23,11 +23,13 @@ const CodePlayground = dynamic(
 type ChallengeDetailPanelProps = {
   challenge: ChallengeWithCategory;
   isResolved?: boolean;
+  onResolvedChange?: (challengeId: string, resolved: boolean) => void;
 };
 
 export function ChallengeDetailPanel({
   challenge,
   isResolved = false,
+  onResolvedChange,
 }: ChallengeDetailPanelProps) {
   return (
     <CodePlayground
@@ -40,6 +42,7 @@ export function ChallengeDetailPanel({
         <ChallengeResolvedCheckbox
           challengeId={challenge.id}
           isResolved={isResolved}
+          onResolvedChange={onResolvedChange}
         />
       }
     />

@@ -60,3 +60,39 @@ export async function isChallengeResolved(
     progress?.status === "COMPLETED" || progress?.status === "MASTERED"
   );
 }
+
+export async function getResolvedChallengeIds(
+  userId: string,
+): Promise<string[]> {
+  const rows = await db.progress.findMany({
+    where: {
+      userId,
+      challengeId: { not: null },
+      mode: CHALLENGE_RESOLVED_MODE,
+      status: { in: ["COMPLETED", "MASTERED"] },
+    },
+    select: { challengeId: true },
+  });
+
+  return rows
+    .map((row) => row.challengeId)
+    .filter((challengeId): challengeId is string => challengeId != null);
+}
+
+export async function getCompletedQuizQuestionIds(
+  userId: string,
+): Promise<string[]> {
+  const rows = await db.progress.findMany({
+    where: {
+      userId,
+      questionId: { not: null },
+      mode: "QUIZ",
+      status: { in: ["COMPLETED", "MASTERED"] },
+    },
+    select: { questionId: true },
+  });
+
+  return rows
+    .map((row) => row.questionId)
+    .filter((questionId): questionId is string => questionId != null);
+}

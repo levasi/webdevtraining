@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 
 import { AddQuestionDialog } from "@/components/layout/add-question-dialog";
 import { ArticleDetailPanel } from "@/components/articles/article-detail-panel";
-import { ChallengeDetailPanel } from "@/components/challenges/challenge-detail-panel";
 import { CategorySearchSidebar } from "@/components/categories/category-search-sidebar";
 import { ContentSidebar } from "@/components/layout/content-sidebar";
 import { SidebarDetailLayout } from "@/components/layout/sidebar-detail-layout";
@@ -34,6 +34,21 @@ import {
 import type { Article, Challenge } from "@/generated/prisma/client";
 import type { CategoryQuestionSummary, DifficultyFilter, QuestionWithAnswers } from "@/types";
 
+const ChallengeDetailPanel = dynamic(
+  () =>
+    import("@/components/challenges/challenge-detail-panel").then(
+      (mod) => mod.ChallengeDetailPanel,
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="grid min-h-[280px] place-items-center text-sm text-muted-foreground sm:min-h-[420px]">
+        Loading playground…
+      </div>
+    ),
+  },
+);
+
 type CategoryQuestion = CategoryQuestionSummary;
 
 type CategoryTab = "questions" | "challenges" | "quizzes" | "articles";
@@ -48,6 +63,8 @@ type CategoryContentProps = {
     articles: Article[];
   };
   completedQuestionIds?: string[];
+  completedQuizQuestionIds?: string[];
+  resolvedChallengeIds?: string[];
   readLaterQuestionIds?: string[];
   isAdmin?: boolean;
 };
@@ -173,6 +190,8 @@ function EmptyDetail({ message }: { message: string }) {
 export function CategoryContent({
   category,
   completedQuestionIds = [],
+  completedQuizQuestionIds = [],
+  resolvedChallengeIds = [],
   readLaterQuestionIds = [],
   isAdmin = false,
 }: CategoryContentProps) {
@@ -190,6 +209,9 @@ export function CategoryContent({
   const [activeTab, setActiveTab] = useState<CategoryTab>(() =>
     getFirstAvailableTab(categoryState),
   );
+  const [visitedTabs, setVisitedTabs] = useState<Partial<Record<CategoryTab, boolean>>>(
+    () => ({ [getFirstAvailableTab(categoryState)]: true }),
+  );
   const [difficultyFilter, setDifficultyFilter] =
     useState<DifficultyFilter>("ALL");
   const [sort, setSort] = useState<CategorySortOption>("difficulty-asc");
@@ -202,6 +224,12 @@ export function CategoryContent({
   const [showCompleted, setShowCompleted] = useState(true);
   const [completedIds, setCompletedIds] = useState(
     () => new Set(completedQuestionIds),
+  );
+  const [completedQuizIds] = useState(
+    () => new Set(completedQuizQuestionIds),
+  );
+  const [resolvedIds, setResolvedIds] = useState(
+    () => new Set(resolvedChallengeIds),
   );
   const [readLaterIds, setReadLaterIds] = useState(
     () => new Set(readLaterQuestionIds),
@@ -245,6 +273,12 @@ export function CategoryContent({
     }
   }, [activeTab, availableTabs]);
 
+  useEffect(() => {
+    setVisitedTabs((current) =>
+      current[activeTab] ? current : { ...current, [activeTab]: true },
+    );
+  }, [activeTab]);
+
   const filteredQuestions = useMemo(() => {
     const items = filterByDifficulty(categoryState.questions, difficultyFilter);
     return sortCategoryItems(items, sort);
@@ -276,7 +310,7 @@ export function CategoryContent({
     return sortCategoryItems(items, sort);
   }, [categoryState.challenges, difficultyFilter, sort]);
 
-  const visibleChallenges = useMemo(() => {
+  const searchFilteredChallenges = useMemo(() => {
     const query = debouncedChallengeSearch.trim().toLowerCase();
     if (!query) {
       return filteredChallenges;
@@ -287,12 +321,22 @@ export function CategoryContent({
     );
   }, [filteredChallenges, debouncedChallengeSearch]);
 
+  const visibleChallenges = useMemo(() => {
+    if (showCompleted) {
+      return searchFilteredChallenges;
+    }
+
+    return searchFilteredChallenges.filter(
+      (challenge) => !resolvedIds.has(challenge.id),
+    );
+  }, [searchFilteredChallenges, showCompleted, resolvedIds]);
+
   const filteredQuizQuestions = useMemo(() => {
     const items = filterByDifficulty(quizQuestions, difficultyFilter);
     return sortCategoryItems(items, sort);
   }, [quizQuestions, difficultyFilter, sort]);
 
-  const visibleQuizQuestions = useMemo(() => {
+  const searchFilteredQuizQuestions = useMemo(() => {
     const query = debouncedQuizSearch.trim().toLowerCase();
     if (!query) {
       return filteredQuizQuestions;
@@ -302,6 +346,22 @@ export function CategoryContent({
       questionMatchesSearch(question, query),
     );
   }, [filteredQuizQuestions, debouncedQuizSearch]);
+
+  const visibleQuizQuestions = useMemo(() => {
+    if (showCompleted) {
+      return searchFilteredQuizQuestions;
+    }
+
+    return searchFilteredQuizQuestions.filter(
+      (question) =>
+        !completedIds.has(question.id) && !completedQuizIds.has(question.id),
+    );
+  }, [
+    searchFilteredQuizQuestions,
+    showCompleted,
+    completedIds,
+    completedQuizIds,
+  ]);
 
   const filteredArticles = useMemo(() => {
     const items = filterArticlesByDifficulty(categoryState.articles, difficultyFilter);
@@ -409,87 +469,100 @@ export function CategoryContent({
     });
   }
 
+  function handleChallengeResolvedChange(
+    challengeId: string,
+    resolved: boolean,
+  ) {
+    setResolvedIds((current) => {
+      const next = new Set(current);
+      if (resolved) {
+        next.add(challengeId);
+      } else {
+        next.delete(challengeId);
+      }
+      return next;
+    });
+  }
+
   const toolbar = (
-    <div className="relative flex flex-col gap-3 rounded-xl border border-border/80 bg-card/80 p-3 shadow-sm lg:flex-row lg:items-center lg:justify-between lg:gap-4">
-      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-        <h1 className="shrink-0 px-1 text-xl font-bold tracking-tight sm:text-2xl">
-          {categoryState.name}
-        </h1>
+    <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border/80 bg-card/80 p-2.5 shadow-sm sm:gap-3 sm:p-3">
+      <h1 className="shrink-0 px-1 text-xl font-bold tracking-tight sm:text-2xl">
+        {categoryState.name}
+      </h1>
 
-        <Select
-          value={difficultyFilter}
-          onValueChange={(value) =>
-            setDifficultyFilter(value as DifficultyFilter)
-          }
+      <Select
+        value={difficultyFilter}
+        onValueChange={(value) =>
+          setDifficultyFilter(value as DifficultyFilter)
+        }
+      >
+        <SelectTrigger
+          className="w-auto max-w-full bg-background"
+          aria-label="Filter by difficulty"
         >
-          <SelectTrigger
-            className="w-full bg-background sm:w-44"
-            aria-label="Filter by difficulty"
-          >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {difficultyFilters.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {difficultyFilters.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
-        <Select
-          value={sort}
-          onValueChange={(value) => setSort(value as CategorySortOption)}
+      <Select
+        value={sort}
+        onValueChange={(value) => setSort(value as CategorySortOption)}
+      >
+        <SelectTrigger
+          className="w-auto max-w-full bg-background"
+          aria-label="Sort items"
         >
-          <SelectTrigger
-            className="w-full bg-background sm:w-56"
-            aria-label="Sort items"
-          >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {sortOptions.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {sortOptions.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
-        {activeTab === "questions" ? (
-          <div className="flex items-center">
-            <Checkbox
-              variant="completed"
-              checked={showCompleted}
-              onCheckedChange={(checked) => setShowCompleted(checked === true)}
-              aria-label="Show completed"
-              title="Show completed"
-            />
-          </div>
-        ) : null}
-      </div>
-
-      {availableTabs.length > 1 ? (
-        <div className="flex justify-center lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">
-          <TabsList>
-            {hasQuestions ? (
-              <TabsTrigger value="questions">Questions</TabsTrigger>
-            ) : null}
-            {hasChallenges ? (
-              <TabsTrigger value="challenges">Challenges</TabsTrigger>
-            ) : null}
-            {hasArticles ? (
-              <TabsTrigger value="articles">Articles</TabsTrigger>
-            ) : null}
-            {hasQuizzes ? (
-              <TabsTrigger value="quizzes">Quizzes</TabsTrigger>
-            ) : null}
-          </TabsList>
+      {activeTab === "questions" ||
+      activeTab === "challenges" ||
+      activeTab === "quizzes" ? (
+        <div className="flex shrink-0 items-center">
+          <Checkbox
+            variant="completed"
+            checked={showCompleted}
+            onCheckedChange={(checked) => setShowCompleted(checked === true)}
+            aria-label="Show completed"
+            title="Show completed"
+          />
         </div>
       ) : null}
 
+      {availableTabs.length > 1 ? (
+        <TabsList className="w-max max-w-full shrink-0">
+          {hasQuestions ? (
+            <TabsTrigger value="questions">Questions</TabsTrigger>
+          ) : null}
+          {hasChallenges ? (
+            <TabsTrigger value="challenges">Challenges</TabsTrigger>
+          ) : null}
+          {hasArticles ? (
+            <TabsTrigger value="articles">Articles</TabsTrigger>
+          ) : null}
+          {hasQuizzes ? (
+            <TabsTrigger value="quizzes">Quizzes</TabsTrigger>
+          ) : null}
+        </TabsList>
+      ) : null}
+
       {isAdmin ? (
-        <div className="flex shrink-0 items-center justify-end">
+        <div className="ml-auto shrink-0">
           <AddQuestionDialog defaultCategoryId={categoryState.id} />
         </div>
       ) : null}
@@ -593,7 +666,11 @@ export function CategoryContent({
       ) : null}
 
       {hasChallenges ? (
-        <TabsContent value="challenges" className="mt-0">
+        <TabsContent
+          value="challenges"
+          className="mt-0"
+          keepMounted={Boolean(visitedTabs.challenges)}
+        >
           <SidebarDetailLayout
             sidebar={
               <CategorySearchSidebar
@@ -613,17 +690,21 @@ export function CategoryContent({
                 emptyMessage={
                   filteredChallenges.length === 0
                     ? "No challenges match the current filter."
-                    : challengeSearch.trim()
+                    : searchFilteredChallenges.length === 0
                       ? "No challenges match your search."
-                      : "No challenges match the current filter."
+                      : !showCompleted
+                        ? "No incomplete challenges match the current filter. Check Show completed to review finished items."
+                        : "No challenges match the current filter."
                 }
               />
             }
           >
             {selectedChallengeWithCategory ? (
-              <div className="p-4 sm:p-6">
+              <div className="p-3 sm:p-6">
                 <ChallengeDetailPanel
                   challenge={selectedChallengeWithCategory}
+                  isResolved={resolvedIds.has(selectedChallengeWithCategory.id)}
+                  onResolvedChange={handleChallengeResolvedChange}
                 />
               </div>
             ) : (
@@ -634,7 +715,11 @@ export function CategoryContent({
       ) : null}
 
       {hasQuizzes ? (
-        <TabsContent value="quizzes" className="mt-0">
+        <TabsContent
+          value="quizzes"
+          className="mt-0"
+          keepMounted={Boolean(visitedTabs.quizzes)}
+        >
           <SidebarDetailLayout
             sidebar={
               <CategorySearchSidebar
@@ -656,25 +741,28 @@ export function CategoryContent({
                     ? "No quiz questions are available in this category yet."
                     : filteredQuizQuestions.length === 0
                       ? "No quiz questions match the current filter."
-                      : quizSearch.trim()
+                      : searchFilteredQuizQuestions.length === 0
                         ? "No quiz questions match your search."
-                        : "No quiz questions match the current filter."
+                        : !showCompleted
+                          ? "No incomplete quiz questions match the current filter. Check Show completed to review finished items."
+                          : "No quiz questions match the current filter."
                 }
               />
             }
           >
             {selectedQuizQuestion ? (
               <div className="p-4 sm:p-6">
+                <div className="mb-4 flex justify-end">
+                  <QuestionCompletionCheckbox
+                    questionId={selectedQuizQuestion.id}
+                    isCompleted={completedIds.has(selectedQuizQuestion.id)}
+                    onCompletionChange={handleCompletionChange}
+                  />
+                </div>
                 <LazyQuizQuestionPlayer
                   question={selectedQuizQuestion}
                   showBackLink={false}
                 />
-                <Link
-                  href={`/quiz/${selectedQuizQuestion.id}`}
-                  className="mt-4 inline-block text-sm text-primary hover:underline"
-                >
-                  Open full page →
-                </Link>
               </div>
             ) : (
               <EmptyDetail message="Select a quiz question from the list." />

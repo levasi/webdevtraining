@@ -23,6 +23,7 @@ type DeleteQuestionButtonProps = {
   size?: "sm" | "default";
   variant?: "outline" | "ghost" | "destructive";
   className?: string;
+  iconOnlyOnMobile?: boolean;
 };
 
 export function DeleteQuestionButton({
@@ -32,6 +33,7 @@ export function DeleteQuestionButton({
   size = "sm",
   variant = "outline",
   className,
+  iconOnlyOnMobile = false,
 }: DeleteQuestionButtonProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -62,14 +64,18 @@ export function DeleteQuestionButton({
         type="button"
         size={size}
         variant={variant}
-        className={cn(className)}
+        className={cn(iconOnlyOnMobile && "px-2 sm:px-3", className)}
+        aria-label="Delete question"
+        title="Delete question"
         onClick={() => {
           setError(null);
           setOpen(true);
         }}
       >
         <Trash2 className="size-3.5" />
-        Delete
+        <span className={cn(iconOnlyOnMobile && "hidden sm:inline")}>
+          Delete
+        </span>
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>

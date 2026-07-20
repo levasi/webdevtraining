@@ -46,6 +46,7 @@ const optionalTemplateEngines = [
   "templayed",
   "toffee",
   "twig",
+  "twing",
   "underscore",
   "vash",
   "velocityjs",

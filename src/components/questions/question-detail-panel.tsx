@@ -216,7 +216,7 @@ export const QuestionDetailPanel = memo(function QuestionDetailPanel({
   }
 
   const actionButtons = canEdit ? (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex items-center gap-1.5 sm:gap-2">
       {editing ? (
         <>
           <Button type="submit" size="sm" disabled={loading}>
@@ -238,6 +238,7 @@ export const QuestionDetailPanel = memo(function QuestionDetailPanel({
             questionId={displayQuestion.id}
             questionTitle={displayQuestion.title}
             onDeleted={onQuestionDeleted}
+            iconOnlyOnMobile
           />
         </>
       ) : (
@@ -250,14 +251,17 @@ export const QuestionDetailPanel = memo(function QuestionDetailPanel({
               resetDraft();
               setEditing(true);
             }}
+            aria-label="Edit question"
+            title="Edit question"
           >
             <Pencil className="size-3.5" />
-            Edit
+            <span className="hidden sm:inline">Edit</span>
           </Button>
           <DeleteQuestionButton
             questionId={displayQuestion.id}
             questionTitle={displayQuestion.title}
             onDeleted={onQuestionDeleted}
+            iconOnlyOnMobile
           />
         </>
       )}
@@ -265,8 +269,8 @@ export const QuestionDetailPanel = memo(function QuestionDetailPanel({
   ) : null;
 
   const badgeRow = (
-    <div className="flex flex-wrap items-center justify-between gap-2">
-      <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-col gap-2.5">
+      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
         <Badge variant={difficultyVariant[displayQuestion.difficulty]}>
           {DIFFICULTY_LABELS[displayQuestion.difficulty]}
         </Badge>
@@ -279,26 +283,32 @@ export const QuestionDetailPanel = memo(function QuestionDetailPanel({
           </Badge>
         ) : null}
       </div>
-      <div className="flex flex-wrap items-center gap-2">
-        {actionButtons}
-        <QuestionReadLaterButton
-          questionId={displayQuestion.id}
-          isReadLater={isReadLater}
-          onReadLaterChange={onReadLaterChange}
-        />
-        <QuestionCompletionCheckbox
-          questionId={displayQuestion.id}
-          isCompleted={isCompleted}
-          onCompletionChange={onCompletionChange}
-        />
+
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
+          {actionButtons}
+        </div>
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+          <QuestionReadLaterButton
+            questionId={displayQuestion.id}
+            isReadLater={isReadLater}
+            onReadLaterChange={onReadLaterChange}
+            iconOnlyOnMobile
+          />
+          <QuestionCompletionCheckbox
+            questionId={displayQuestion.id}
+            isCompleted={isCompleted}
+            onCompletionChange={onCompletionChange}
+          />
+        </div>
       </div>
     </div>
   );
 
   return (
-    <div className={cn("space-y-6", wrapLongTextClass)}>
+    <div className={cn("space-y-4 sm:space-y-6", wrapLongTextClass)}>
       {editing ? (
-        <form onSubmit={handleSave} className="space-y-6">
+        <form onSubmit={handleSave} className="space-y-4 sm:space-y-6">
           {badgeRow}
 
           <div className="space-y-2">
@@ -401,7 +411,7 @@ export const QuestionDetailPanel = memo(function QuestionDetailPanel({
 
           <TitleTag
             className={cn(
-              "text-2xl font-bold leading-snug tracking-tight",
+              "text-xl font-bold leading-snug tracking-tight sm:text-2xl",
               wrapLongTextClass,
             )}
           >

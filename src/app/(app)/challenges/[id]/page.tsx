@@ -25,7 +25,7 @@ export default async function ChallengeDetailPage({ params }: PageProps) {
     : false;
 
   return (
-    <div className="w-full px-2 py-8 sm:px-6">
+    <div className="w-full px-2 py-4 sm:px-6 sm:py-8">
       <ChallengeSidebarLayout
         challenge={challenge}
         items={siblings}

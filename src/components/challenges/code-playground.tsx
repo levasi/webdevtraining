@@ -278,8 +278,8 @@ export function CodePlayground({
   });
 
   const editorColumn = (
-    <section className="flex h-full min-h-[420px] flex-col overflow-hidden rounded-[10px] border border-border bg-card shadow-[0_18px_40px_-28px_rgb(28_25_21_/_0.45)]">
-      <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-border bg-[#ebe4d6]/70 px-3.5 py-2.5">
+    <section className="flex h-full min-h-[280px] flex-col overflow-hidden rounded-[10px] border border-border bg-card shadow-[0_18px_40px_-28px_rgb(28_25_21_/_0.45)] sm:min-h-[420px]">
+      <header className="flex shrink-0 flex-col gap-2.5 border-b border-border bg-[#ebe4d6]/70 px-2.5 py-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-3 sm:px-3.5 sm:py-2.5">
         <p className="text-sm text-muted-foreground">
           {isVue ? (
             <>
@@ -300,7 +300,7 @@ export function CodePlayground({
             <span className="ml-2 text-xs text-primary">· draft saved</span>
           )}
         </p>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
           <Button
             type="button"
             variant="outline"
@@ -381,11 +381,11 @@ export function CodePlayground({
         <ChallengeConsole
           entries={logs}
           onClear={() => setLogs([])}
-          className="h-[min(28vh,220px)] min-h-[120px]"
+          className="h-[min(22dvh,180px)] min-h-[100px] sm:h-[min(28vh,220px)] sm:min-h-[120px]"
         />
       </div>
 
-      <footer className="shrink-0 space-y-3 border-t border-border bg-[#f3efe6] px-3.5 py-3">
+      <footer className="shrink-0 space-y-3 border-t border-border bg-[#f3efe6] px-2.5 py-2.5 sm:px-3.5 sm:py-3">
         {runError && (
           <p className="font-mono text-sm whitespace-pre-wrap text-destructive">
             {runError}
@@ -576,10 +576,10 @@ export function CodePlayground({
 
   if (!isXl) {
     return (
-      <div className="flex flex-col gap-4">
-        <div className="h-[min(70vh,720px)] min-h-[480px]">{editorColumn}</div>
+      <div className="flex flex-col gap-3 sm:gap-4">
+        {editorColumn}
         {previewColumn}
-        <div className="min-h-[240px]">{testsColumn}</div>
+        <div className="min-h-[200px] sm:min-h-[240px]">{testsColumn}</div>
       </div>
     );
   }

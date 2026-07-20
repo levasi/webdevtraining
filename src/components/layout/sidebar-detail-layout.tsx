@@ -83,15 +83,17 @@ export function SidebarDetailLayout({
         "flex flex-col rounded-xl border border-border/80 bg-card shadow-sm lg:flex-row",
         className,
       )}
+      style={{ ["--sidebar-w" as string]: `${width}px` }}
     >
       <aside
         className={cn(
-          "hidden shrink-0 bg-[#ebe4d6]/55",
-          "lg:sticky lg:flex lg:flex-col lg:self-start lg:overflow-hidden",
+          // Mobile: stacked list above content.
+          "flex w-full max-h-[min(42dvh,22rem)] shrink-0 flex-col overflow-hidden rounded-t-xl border-b border-border/70 bg-[#ebe4d6]/55",
+          // Desktop: sticky full-viewport column.
+          "lg:sticky lg:max-h-none lg:w-[var(--sidebar-w)] lg:self-start lg:rounded-t-none lg:rounded-l-xl lg:border-b-0 lg:overflow-hidden",
           STICKY_TOP,
           STICKY_HEIGHT,
         )}
-        style={{ width }}
       >
         <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
           {sidebar}
@@ -149,7 +151,9 @@ export function SidebarDetailLayout({
         />
       </div>
 
-      <main className="min-w-0 flex-1 bg-card">{children}</main>
+      <main className="min-h-0 min-w-0 flex-1 overflow-hidden rounded-b-xl bg-card lg:rounded-b-none lg:rounded-r-xl">
+        {children}
+      </main>
     </div>
   );
 }

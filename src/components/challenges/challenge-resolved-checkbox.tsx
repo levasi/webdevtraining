@@ -9,11 +9,13 @@ import { useSession } from "@/lib/auth-client";
 type ChallengeResolvedCheckboxProps = {
   challengeId: string;
   isResolved?: boolean;
+  onResolvedChange?: (challengeId: string, resolved: boolean) => void;
 };
 
 export function ChallengeResolvedCheckbox({
   challengeId,
   isResolved = false,
+  onResolvedChange,
 }: ChallengeResolvedCheckboxProps) {
   const { data: session } = useSession();
   const [resolved, setResolved] = useState(isResolved);
@@ -40,6 +42,7 @@ export function ChallengeResolvedCheckbox({
       }
 
       setResolved(result.data.resolved);
+      onResolvedChange?.(challengeId, result.data.resolved);
     });
   }
 

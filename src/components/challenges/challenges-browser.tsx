@@ -54,7 +54,7 @@ export function ChallengesBrowser({ challenges }: ChallengesBrowserProps) {
       }
     >
       {selectedChallenge ? (
-        <div className="p-4 sm:p-6">
+        <div className="p-3 sm:p-6">
           <ChallengeDetailPanel challenge={selectedChallenge} />
         </div>
       ) : (

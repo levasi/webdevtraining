@@ -91,8 +91,24 @@ export function CodeEditor({
     editorRef.current = editor;
     setReady(true);
     syncHeight(editor);
-    editor.onDidContentSizeChange(() => syncHeight(editor));
+    editor.onDidContentSizeChange(() => {
+      if (editorRef.current === editor) {
+        syncHeight(editor);
+      }
+    });
   };
+
+  useEffect(() => {
+    return () => {
+      const editor = editorRef.current;
+      editorRef.current = null;
+      try {
+        editor?.dispose();
+      } catch {
+        // Monaco may throw OperationCanceledException while tearing down.
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const el = containerRef.current;

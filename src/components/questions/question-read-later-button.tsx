@@ -21,12 +21,14 @@ type QuestionReadLaterButtonProps = {
   questionId: string;
   isReadLater?: boolean;
   onReadLaterChange?: (questionId: string, readLater: boolean) => void;
+  iconOnlyOnMobile?: boolean;
 };
 
 export function QuestionReadLaterButton({
   questionId,
   isReadLater = false,
   onReadLaterChange,
+  iconOnlyOnMobile = false,
 }: QuestionReadLaterButtonProps) {
   const { data: session } = useSession();
   const [readLater, setReadLater] = useState(isReadLater);
@@ -67,12 +69,18 @@ export function QuestionReadLaterButton({
         onClick={handleToggle}
         disabled={isPending}
         aria-pressed={readLater}
+        aria-label={
+          readLater ? "Remove from read later" : "Mark question as read later"
+        }
         title={
           readLater ? "Remove from read later" : "Mark question as read later"
         }
+        className={cn(iconOnlyOnMobile && "px-2 sm:px-3")}
       >
         <Bookmark className={cn("size-3.5", readLater && "fill-current")} />
-        {readLater ? "Saved" : "Read later"}
+        <span className={cn(iconOnlyOnMobile && "hidden sm:inline")}>
+          {readLater ? "Saved" : "Read later"}
+        </span>
       </Button>
       {error ? (
         <p

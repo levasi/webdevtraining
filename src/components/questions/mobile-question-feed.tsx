@@ -74,7 +74,7 @@ function MobileQuestionCard({
       ref={ref}
       id={questionElementId(question.id)}
       className={cn(
-        "scroll-mt-20 space-y-4 bg-card border-t border-t-border py-4",
+        "scroll-mt-20 rounded-xl border border-border/80 bg-card p-3.5 shadow-sm sm:p-4",
         wrapLongTextClass,
       )}
     >
@@ -93,9 +93,10 @@ function MobileQuestionCard({
           canEdit={canEdit}
         />
       ) : (
-        <div className="space-y-3 px-1" aria-hidden="true">
-          <div className="h-6 w-3/4 animate-pulse rounded bg-muted" />
-          <div className="h-20 animate-pulse rounded-lg bg-muted/60" />
+        <div className="space-y-3" aria-hidden="true">
+          <div className="h-5 w-2/5 animate-pulse rounded bg-muted" />
+          <div className="h-7 w-4/5 animate-pulse rounded bg-muted" />
+          <div className="h-24 animate-pulse rounded-lg bg-muted/60" />
         </div>
       )}
     </article>
@@ -141,19 +142,20 @@ export function MobileQuestionFeed({
   }
 
   return (
-    <div className={cn("space-y-4 lg:hidden", wrapLongTextClass)}>
+    <div className={cn("space-y-3 lg:hidden", wrapLongTextClass)}>
       <Input
         type="search"
         value={searchQuery}
         onChange={(event) => onSearchChange(event.target.value)}
         placeholder="Search questions..."
         aria-label="Search questions"
+        className="h-10"
       />
 
       {questions.length === 0 ? (
         <p className="text-sm text-muted-foreground">{emptyMessage}</p>
       ) : (
-        <div className="space-y-6" aria-label="Questions in category">
+        <div className="flex flex-col gap-3" aria-label="Questions in category">
           {questions.map((question) => (
             <MobileQuestionCard
               key={question.id}
