@@ -310,7 +310,7 @@ model StudyHistory {
 
 model SiteSettings {
   id        String   @id @default("singleton")
-  mainFont  String   @default("geist")
+  mainFont  String   @default("ibm-plex-sans")
   updatedAt DateTime @updatedAt
 
   @@map("site_settings")

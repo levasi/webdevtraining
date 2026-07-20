@@ -334,7 +334,7 @@ async function seedSiteSettings() {
   await prisma.siteSettings.upsert({
     where: { id: "singleton" },
     update: {},
-    create: { id: "singleton", mainFont: "geist" },
+    create: { id: "singleton", mainFont: "ibm-plex-sans" },
   });
 }
 

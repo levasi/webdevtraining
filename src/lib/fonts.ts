@@ -1,6 +1,7 @@
-export const DEFAULT_MAIN_FONT = "geist" as const;
+export const DEFAULT_MAIN_FONT = "ibm-plex-sans" as const;
 
 export type MainFontKey =
+  | "ibm-plex-sans"
   | "geist"
   | "inter"
   | "dm-sans"
@@ -18,6 +19,11 @@ type MainFontOption = {
 };
 
 export const MAIN_FONT_OPTIONS: MainFontOption[] = [
+  {
+    value: "ibm-plex-sans",
+    label: "IBM Plex Sans",
+    cssVariable: "--font-ibm-plex-sans",
+  },
   { value: "geist", label: "Geist Sans", cssVariable: "--font-geist-sans" },
   { value: "inter", label: "Inter", cssVariable: "--font-inter" },
   { value: "dm-sans", label: "DM Sans", cssVariable: "--font-dm-sans" },
@@ -51,13 +57,13 @@ export function isMainFontKey(value: string): value is MainFontKey {
 export function getMainFontCssVariable(key: MainFontKey): string {
   return (
     MAIN_FONT_OPTIONS.find((option) => option.value === key)?.cssVariable ??
-    "--font-geist-sans"
+    "--font-ibm-plex-sans"
   );
 }
 
 export function getMainFontLabel(key: MainFontKey): string {
   return (
     MAIN_FONT_OPTIONS.find((option) => option.value === key)?.label ??
-    "Geist Sans"
+    "IBM Plex Sans"
   );
 }

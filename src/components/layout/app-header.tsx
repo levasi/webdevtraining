@@ -117,7 +117,7 @@ export function AppHeader({ onMenuClick }: AppHeaderProps) {
           </Button>
           <Link
             href="/"
-            className="font-semibold tracking-tight"
+            className="font-heading text-lg font-semibold tracking-tight"
             title="Web Dev Training"
           >
             WDT
