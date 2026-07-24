@@ -86,7 +86,8 @@ The content module should always include at least:
 4. **Architecture** — App Router, Server Actions vs Route Handlers, Prisma
 5. **Ask AI** — widget, `/chat`, contextual sheets, shared conversation, env
 6. **Local & production** — common scripts, env var names, Vercel note
-7. **Agents** — pointer to `.cursor/skills/*` that maintain the repo
+7. **Testing** — Vitest / Playwright commands and coverage scope
+8. **Agents** — pointer to `.cursor/skills/*` that maintain the repo
 
 Add extra sections when useful (admin, seeding, challenges runners, etc.).
 

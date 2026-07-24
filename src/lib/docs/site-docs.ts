@@ -114,11 +114,28 @@ Keys must be plain ASCII. Polluted env values (for example tip text mixed into t
 | \`npm run db:migrate\` / \`db:push\` | Schema updates |
 | \`npm run db:seed\` | Seed categories and questions |
 | \`npm run questions:audit\` | Audit interview question bank |
-| \`npm test\` | Vitest unit tests |
+| \`npm test\` | Vitest unit tests (\`src/**/*.test.ts\`) |
+| \`npm run test:e2e\` | Playwright smoke tests (\`e2e/\`) |
 
 **Also expect** database URL vars (\`DATABASE_URL\` / Neon-style aliases), Better Auth secrets (\`BETTER_AUTH_SECRET\`, \`BETTER_AUTH_URL\`), and optional Google OAuth client id/secret for social login.
 
 Production runs on Vercel. After adding or rotating secrets, trigger a new deployment so serverless functions pick them up.`,
+  },
+  {
+    id: "testing",
+    title: "Testing",
+    markdown: `Automated tests cover core product logic and public route smokes.
+
+| Kind | Tool | Command | Location |
+| --- | --- | --- | --- |
+| Unit | Vitest (jsdom) | \`npm test\` | \`src/**/*.{test,spec}.{ts,tsx}\` |
+| E2E | Playwright (Chromium) | \`npm run test:e2e\` | \`e2e/*.spec.ts\` |
+
+**Unit focus:** question sort/eligibility/preview helpers, challenge meta + local runner + draft storage, AI config/prompt/errors, validators, database/app URL helpers, docs content integrity.
+
+**E2E focus:** public pages (\`/\`, categories, challenges, quiz, docs, resources, chat, auth screens), seeded category (\`/categories/javascript\`), and anonymous redirects from \`/completed\` and \`/read-later\` to login.
+
+Owned by the **App Testing Agent** (\`.cursor/skills/app-testing-agent\`). Gaps still include authenticated flows, admin UI, and full Ask AI streaming conversations.`,
   },
   {
     id: "agents",
@@ -128,9 +145,10 @@ Production runs on Vercel. After adding or rotating secrets, trigger a new deplo
 | Agent | Role |
 | --- | --- |
 | **App Docs Agent** | Owns \`/docs\` and \`src/lib/docs/site-docs.ts\` (this page) |
+| **App Testing Agent** | Owns Vitest + Playwright coverage across features |
 | **App Cleanup Auditor** | Finds leftover files, dead exports, and refactor opportunities |
 | **Interview Question Generator** | Adds unique questions to \`prisma/data\` and seeds |
 
-Invoke them from chat when you want docs refreshed, a cleanup audit, or new interview questions.`,
+Invoke them from chat when you want docs refreshed, more tests, a cleanup audit, or new interview questions.`,
   },
 ];
