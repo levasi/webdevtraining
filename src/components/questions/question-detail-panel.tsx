@@ -6,6 +6,7 @@ import { Pencil } from "lucide-react";
 
 import { updateQuestion, getQuestionFormCategories } from "@/actions/admin/questions";
 import { RichTextEditor } from "@/components/editor/rich-text-editor";
+import { AskAiSheet } from "@/components/chat/ask-ai-sheet";
 import { DeleteQuestionButton } from "@/components/questions/delete-question-button";
 import { QuestionAnswersList } from "@/components/questions/question-answers-list";
 import { QuestionCompletionCheckbox } from "@/components/questions/question-completion-checkbox";
@@ -289,6 +290,16 @@ export const QuestionDetailPanel = memo(function QuestionDetailPanel({
           {actionButtons}
         </div>
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+          <AskAiSheet
+            context={{
+              type: "question",
+              id: displayQuestion.id,
+              title: displayQuestion.title,
+              summary: displayQuestion.content.replace(/<[^>]+>/g, " ").slice(0, 600),
+              categorySlug: displayQuestion.category.slug,
+            }}
+            iconOnlyOnMobile
+          />
           <QuestionReadLaterButton
             questionId={displayQuestion.id}
             isReadLater={isReadLater}

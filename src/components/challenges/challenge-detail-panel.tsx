@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 
+import { AskAiSheet } from "@/components/chat/ask-ai-sheet";
 import { ChallengeResolvedCheckbox } from "@/components/challenges/challenge-resolved-checkbox";
 import type { ChallengeWithCategory, TestCase } from "@/types";
 
@@ -39,11 +40,23 @@ export function ChallengeDetailPanel({
       hints={challenge.hints}
       testCases={challenge.testCases as TestCase[]}
       toolbarEnd={
-        <ChallengeResolvedCheckbox
-          challengeId={challenge.id}
-          isResolved={isResolved}
-          onResolvedChange={onResolvedChange}
-        />
+        <div className="flex items-center gap-1.5">
+          <AskAiSheet
+            context={{
+              type: "challenge",
+              id: challenge.id,
+              title: challenge.title,
+              summary: challenge.description.slice(0, 600),
+              categorySlug: challenge.category.slug,
+            }}
+            iconOnlyOnMobile
+          />
+          <ChallengeResolvedCheckbox
+            challengeId={challenge.id}
+            isResolved={isResolved}
+            onResolvedChange={onResolvedChange}
+          />
+        </div>
       }
     />
   );

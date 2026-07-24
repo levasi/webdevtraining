@@ -4,6 +4,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { fontVariables } from "@/lib/app-fonts";
 import { AppShell } from "@/components/layout/app-shell";
 import { QueryProvider } from "@/components/providers/query-provider";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { getMainFont } from "@/lib/site-settings";
 
 import "./globals.css";
@@ -39,7 +40,9 @@ export default async function RootLayout({
     >
       <body className="min-h-full flex flex-col overflow-x-clip">
         <QueryProvider>
-          <AppShell>{children}</AppShell>
+          <TooltipProvider>
+            <AppShell>{children}</AppShell>
+          </TooltipProvider>
         </QueryProvider>
         {process.env.NODE_ENV === "production" ? <Analytics /> : null}
       </body>

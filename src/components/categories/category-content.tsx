@@ -531,8 +531,8 @@ export function CategoryContent({
       </Select>
 
       {activeTab === "questions" ||
-      activeTab === "challenges" ||
-      activeTab === "quizzes" ? (
+        activeTab === "challenges" ||
+        activeTab === "quizzes" ? (
         <div className="flex shrink-0 items-center">
           <Checkbox
             variant="completed"

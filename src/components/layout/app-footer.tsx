@@ -4,6 +4,7 @@ import { ProposeContentDialog } from "@/components/layout/propose-content-dialog
 
 const footerLinks = [
   { href: "/categories", label: "Categories" },
+  { href: "/chat", label: "Ask AI" },
   { href: "/quiz", label: "Quizzes" },
   { href: "/challenges", label: "Challenges" },
   { href: "/resources", label: "Resources" },

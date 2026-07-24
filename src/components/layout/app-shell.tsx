@@ -2,6 +2,7 @@
 
 import { Suspense } from "react";
 
+import { AskAiWidget } from "@/components/chat/ask-ai-widget";
 import { AppFooter } from "@/components/layout/app-footer";
 import { AppHeader } from "@/components/layout/app-header";
 import { MobileNav } from "@/components/layout/mobile-nav";
@@ -21,6 +22,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* overflow-x-clip (not hidden) so position:sticky sidebars still work */}
       <main className="min-w-0 flex-1 overflow-x-clip">{children}</main>
       <AppFooter />
+      <AskAiWidget />
     </>
   );
 }

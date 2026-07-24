@@ -1,0 +1,43 @@
+import { describe, expect, it } from "vitest";
+
+import { buildDeveloperChatSystemPrompt } from "@/lib/ai/system-prompt";
+
+describe("buildDeveloperChatSystemPrompt", () => {
+  it("includes retrieved sources when present", () => {
+    const prompt = buildDeveloperChatSystemPrompt({
+      sources: [
+        {
+          kind: "question",
+          id: "1",
+          title: "What is a closure?",
+          categoryName: "JavaScript",
+          excerpt: "A closure is a function that remembers its lexical scope.",
+        },
+      ],
+    });
+
+    expect(prompt).toContain("What is a closure?");
+    expect(prompt).toContain("Retrieved study content");
+  });
+
+  it("falls back to general coaching without sources", () => {
+    const prompt = buildDeveloperChatSystemPrompt({ sources: [] });
+    expect(prompt).toContain("No matching study content was retrieved");
+  });
+
+  it("includes contextual item details", () => {
+    const prompt = buildDeveloperChatSystemPrompt({
+      sources: [],
+      context: {
+        type: "challenge",
+        id: "c1",
+        title: "Implement debounce",
+        summary: "Write a debounce helper",
+        categorySlug: "javascript",
+      },
+    });
+
+    expect(prompt).toContain("Implement debounce");
+    expect(prompt).toContain("challenge");
+  });
+});
