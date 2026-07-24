@@ -96,10 +96,6 @@ function buildHtml(proposal: ProposalEmailContext) {
   `.trim();
 }
 
-export function isProposalEmailConfigured() {
-  return Boolean(getRecipientEmail() && process.env.RESEND_API_KEY?.trim());
-}
-
 export async function sendProposalEmail(proposal: ProposalEmailContext) {
   const recipientEmail = getRecipientEmail();
   const apiKey = process.env.RESEND_API_KEY?.trim();

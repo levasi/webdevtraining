@@ -67,8 +67,3 @@ export function getAuthClientBaseUrl(): string {
 
   return getAppUrl();
 }
-
-/** Better Auth Google OAuth callback — register this in Google Cloud Console. */
-export function getGoogleOAuthRedirectUri(appUrl = getAppUrl()): string {
-  return `${normalizeAppUrl(appUrl)}/api/auth/callback/google`;
-}

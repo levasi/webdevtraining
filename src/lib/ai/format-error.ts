@@ -45,13 +45,20 @@ export function formatAiChatError(error: unknown): string {
   }
 
   if (
+    message.includes("bytestring") ||
+    message.includes("greater than 255")
+  ) {
+    return "GROQ_API_KEY looks corrupted (non-ASCII characters in an HTTP header). Re-add a clean key in Vercel env from https://console.groq.com/keys, then redeploy.";
+  }
+
+  if (
     message.includes("groq") &&
     (message.includes("api key") ||
       message.includes("unauthorized") ||
       message.includes("401") ||
       message.includes("invalid"))
   ) {
-    return "Groq is not configured. Add GROQ_API_KEY from https://console.groq.com/keys to .env.local and restart the app.";
+    return "Groq is not configured. Set GROQ_API_KEY in the Vercel project env (Production) from https://console.groq.com/keys, then redeploy. For local, add it to .env.local and restart.";
   }
 
   if (
@@ -59,11 +66,11 @@ export function formatAiChatError(error: unknown): string {
     message.includes("api") &&
     message.includes("key")
   ) {
-    return "Groq is not configured. Add GROQ_API_KEY from https://console.groq.com/keys to .env.local and restart the app.";
+    return "Groq is not configured. Set GROQ_API_KEY in the Vercel project env (Production) from https://console.groq.com/keys, then redeploy. For local, add it to .env.local and restart.";
   }
 
   if (message.includes("unauthorized") || message.includes("api key")) {
-    return "AI provider is not configured. Set GROQ_API_KEY in .env.local (from https://console.groq.com/keys) and restart.";
+    return "AI provider is not configured. Set GROQ_API_KEY in Vercel env (or .env.local locally) from https://console.groq.com/keys.";
   }
 
   if (message.includes("rate limit") || message.includes("429")) {

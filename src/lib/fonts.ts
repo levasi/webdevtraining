@@ -54,13 +54,6 @@ export function isMainFontKey(value: string): value is MainFontKey {
   return MAIN_FONT_OPTIONS.some((option) => option.value === value);
 }
 
-export function getMainFontCssVariable(key: MainFontKey): string {
-  return (
-    MAIN_FONT_OPTIONS.find((option) => option.value === key)?.cssVariable ??
-    "--font-ibm-plex-sans"
-  );
-}
-
 export function getMainFontLabel(key: MainFontKey): string {
   return (
     MAIN_FONT_OPTIONS.find((option) => option.value === key)?.label ??

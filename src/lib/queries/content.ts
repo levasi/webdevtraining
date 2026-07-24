@@ -166,49 +166,6 @@ export async function getArticleById(id: string) {
   });
 }
 
-export async function getQuizById(id: string) {
-  const quiz = await db.quiz.findUnique({
-    where: { id, isPublished: true },
-    include: {
-      category: { select: { id: true, name: true, slug: true } },
-      questions: {
-        orderBy: { sortOrder: "asc" },
-        include: {
-          question: {
-            include: {
-              answers: {
-                orderBy: { sortOrder: "asc" },
-                select: { id: true, content: true },
-              },
-            },
-          },
-        },
-      },
-    },
-  });
-
-  if (!quiz) {
-    return null;
-  }
-
-  return {
-    id: quiz.id,
-    title: quiz.title,
-    description: quiz.description,
-    timeLimit: quiz.timeLimit,
-    category: quiz.category,
-    questions: quiz.questions
-      .filter((entry) => entry.question.isPublished)
-      .map((entry) => ({
-        id: entry.question.id,
-        title: entry.question.title,
-        content: entry.question.content,
-        type: entry.question.type,
-        answers: entry.question.answers,
-      })),
-  };
-}
-
 export type CategoryNavQuestion = Pick<Question, "id" | "title" | "difficulty">;
 
 export type CategoryNavData = {

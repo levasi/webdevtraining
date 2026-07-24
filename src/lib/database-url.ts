@@ -113,11 +113,6 @@ export function getDirectDatabaseConnectionString(): string {
   return preferred ?? getRuntimeDatabaseConnectionString();
 }
 
-/** @deprecated Use getRuntimeDatabaseConnectionString or getDirectDatabaseConnectionString. */
-export function getDatabaseConnectionString(): string {
-  return getRuntimeDatabaseConnectionString();
-}
-
 export function hasDatabaseConnectionString(): boolean {
   return Boolean(
     process.env.DATABASE_URL ??

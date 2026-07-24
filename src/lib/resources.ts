@@ -168,10 +168,3 @@ export const RESOURCE_TIERS: ResourceTier[] = [
     ],
   },
 ];
-
-export const THIRTY_DAY_STUDY_PLAN = [
-  { resource: "JavaScript.info", percentage: 40 },
-  { resource: "BigFrontend.dev", percentage: 30 },
-  { resource: "GreatFrontEnd", percentage: 20 },
-  { resource: "LeetCode / Codewars", percentage: 10 },
-] as const;

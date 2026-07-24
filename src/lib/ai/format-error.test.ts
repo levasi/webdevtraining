@@ -18,4 +18,14 @@ describe("formatAiChatError", () => {
       /GROQ_API_KEY|console\.groq\.com/i,
     );
   });
+
+  it("explains ByteString header corruption", () => {
+    expect(
+      formatAiChatError(
+        new Error(
+          "Cannot convert argument to a ByteString because the character at index 7 has a value of 9671 which is greater than 255.",
+        ),
+      ),
+    ).toMatch(/GROQ_API_KEY|non-ASCII|corrupted/i);
+  });
 });

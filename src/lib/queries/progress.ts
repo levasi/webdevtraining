@@ -21,26 +21,6 @@ export async function getCompletedQuestionIds(
     .filter((questionId): questionId is string => questionId != null);
 }
 
-export async function isQuestionCompleted(
-  userId: string,
-  questionId: string,
-): Promise<boolean> {
-  const progress = await db.progress.findUnique({
-    where: {
-      userId_questionId_mode: {
-        userId,
-        questionId,
-        mode: QUESTION_COMPLETION_MODE,
-      },
-    },
-    select: { status: true },
-  });
-
-  return (
-    progress?.status === "COMPLETED" || progress?.status === "MASTERED"
-  );
-}
-
 export async function isChallengeResolved(
   userId: string,
   challengeId: string,

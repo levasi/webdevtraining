@@ -24,8 +24,3 @@ export const DIFFICULTY_LABELS = {
   INTERMEDIATE: "Intermediate",
   ADVANCED: "Advanced",
 } as const;
-
-export const LEARNING_MODES = [
-  { slug: "quiz", label: "Quiz Mode", mode: "QUIZ" },
-  { slug: "challenges", label: "Coding Challenges", mode: "CODING" },
-] as const;

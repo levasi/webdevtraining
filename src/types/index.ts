@@ -52,22 +52,6 @@ export type CategorySummary = Pick<
 
 export type DifficultyFilter = Difficulty | "ALL";
 
-export type QuizPlayerQuestion = {
-  id: string;
-  title: string;
-  content: string;
-  type: Question["type"];
-  answers: Array<Pick<Answer, "id" | "content">>;
-};
-
-export type QuizPlayerData = {
-  id: string;
-  title: string;
-  description: string | null;
-  timeLimit: number | null;
-  questions: QuizPlayerQuestion[];
-};
-
 export type ActionResult<T = void> =
   | { success: true; data: T }
   | { success: false; error: string };

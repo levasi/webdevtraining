@@ -90,8 +90,3 @@ export async function loadChallengeModule(
   const shim = ensureVueShim()
   return importBlobModule(rewriteVueImports(js, shim))
 }
-
-/** Whether the starter can be executed by the in-browser runner. */
-export function isRunnableInBrowser(_starterFile: string): boolean {
-  return true
-}

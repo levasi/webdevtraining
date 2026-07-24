@@ -98,23 +98,6 @@ export const deleteQuestionSchema = z.object({
   questionId: z.string().min(1),
 });
 
-export const createChallengeSchema = z.object({
-  categoryId: z.string().min(1),
-  title: z.string().min(3).max(200),
-  description: z.string().min(10),
-  difficulty: difficultySchema,
-  starterCode: z.string().min(1),
-  solutionCode: z.string().min(1),
-  testCases: z.array(
-    z.object({
-      input: z.unknown(),
-      expectedOutput: z.unknown(),
-      description: z.string().optional(),
-    }),
-  ),
-  hints: z.array(z.string()).default([]),
-});
-
 export const runChallengeSchema = z.object({
   challengeId: z.string().min(1),
   code: z.string().min(1),
@@ -139,11 +122,5 @@ export const checkQuestionAnswerSchema = z.object({
   answerIds: z.array(z.string().min(1)).min(1),
 });
 
-export const noteSchema = z.object({
-  questionId: z.string().optional(),
-  content: z.string().min(1).max(5000),
-});
-
 export type CreateQuestionInput = z.infer<typeof createQuestionSchema>;
 export type UpdateQuestionInput = z.infer<typeof updateQuestionSchema>;
-export type CreateChallengeInput = z.infer<typeof createChallengeSchema>;

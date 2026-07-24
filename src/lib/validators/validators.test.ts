@@ -2,22 +2,6 @@ import { describe, expect, it } from "vitest";
 
 import { createQuestionSchema } from "@/lib/validators/content";
 import { contentProposalSchema } from "@/lib/validators/proposal";
-import { submitQuizSchema } from "@/lib/validators/quiz";
-
-describe("quiz validators", () => {
-  it("accepts a valid quiz submission payload", () => {
-    const result = submitQuizSchema.safeParse({
-      quizId: "quiz-1",
-      answers: [
-        { questionId: "q-1", answerId: "a-1" },
-        { questionId: "q-2", answerId: "a-2" },
-      ],
-      startedAt: new Date().toISOString(),
-    });
-
-    expect(result.success).toBe(true);
-  });
-});
 
 describe("contentProposalSchema", () => {
   it("accepts a valid content proposal", () => {

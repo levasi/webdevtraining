@@ -268,8 +268,6 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 | Component | Location | Role |
 |-----------|----------|------|
 | `CategoryGrid` | `components/categories/category-grid.tsx` | Category cards with counts |
-| `QuestionCard` | `components/questions/question-card.tsx` | Question preview card |
-| `FlashcardDeck` | `components/flashcards/flashcard-deck.tsx` | Flip + navigate cards |
 | `CodePlayground` | `components/challenges/code-playground.tsx` | Editor + run tests (TanStack Query) |
 | `AppHeader` | `components/layout/app-header.tsx` | Top nav + mobile menu |
 | `QueryProvider` | `components/providers/query-provider.tsx` | TanStack Query wrapper |

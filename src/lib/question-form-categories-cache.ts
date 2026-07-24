@@ -6,11 +6,6 @@ export type QuestionFormCategory = {
 let cachedCategories: QuestionFormCategory[] | null = null;
 let loadPromise: Promise<QuestionFormCategory[]> | null = null;
 
-export function clearQuestionFormCategoriesCache() {
-  cachedCategories = null;
-  loadPromise = null;
-}
-
 export function getCachedQuestionFormCategories(): QuestionFormCategory[] | null {
   return cachedCategories;
 }
