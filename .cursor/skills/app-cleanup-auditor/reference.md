@@ -22,6 +22,7 @@ Entrypoints that look “unused” but are not: `page.tsx`, `layout.tsx`, `loadi
 | Feature | Surfaces | Notes |
 |---------|----------|-------|
 | Ask AI | Widget (`ask-ai-widget`), `/chat` page, contextual `ask-ai-sheet` | Widget + `/chat` share `getSharedDeveloperChat()`; sheets are contextual and separate |
+| Docs | `/docs` via `site-docs.ts` | Owned by App Docs Agent |
 | Questions | Category panel + admin CRUD | Different audiences |
 | Challenges | Browser + detail panel + playground | Expected composition |
 

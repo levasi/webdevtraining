@@ -8,6 +8,7 @@ const footerLinks = [
   { href: "/quiz", label: "Quizzes" },
   { href: "/challenges", label: "Challenges" },
   { href: "/resources", label: "Resources" },
+  { href: "/docs", label: "Docs" },
 ];
 
 export function AppFooter() {
