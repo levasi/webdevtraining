@@ -1,4 +1,3 @@
-import { headers } from "next/headers";
 import {
   convertToModelMessages,
   streamText,
@@ -10,7 +9,6 @@ import { getAiChatModel } from "@/lib/ai/config";
 import { formatAiChatError } from "@/lib/ai/format-error";
 import { searchStudyContent } from "@/lib/ai/search-study-content";
 import { buildDeveloperChatSystemPrompt } from "@/lib/ai/system-prompt";
-import { auth } from "@/lib/auth";
 
 export const maxDuration = 60;
 
@@ -47,12 +45,6 @@ function getLastUserText(messages: UIMessage[]): string {
 }
 
 export async function POST(request: Request) {
-  const session = await auth.api.getSession({ headers: await headers() });
-
-  if (!session?.user) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   let json: unknown;
   try {
     json = await request.json();

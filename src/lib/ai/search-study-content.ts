@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import type { StudyContentSnippet } from "@/lib/ai/types";
+import { categoryQuestionHref } from "@/lib/question-hash";
 
 const STOP_WORDS = new Set([
   "a",
@@ -116,7 +117,7 @@ export async function searchStudyContent(
         id: true,
         title: true,
         content: true,
-        category: { select: { name: true } },
+        category: { select: { name: true, slug: true } },
       },
       take: MAX_RESULTS,
       orderBy: { updatedAt: "desc" },
@@ -151,6 +152,7 @@ export async function searchStudyContent(
     title: question.title,
     categoryName: question.category.name,
     excerpt: excerpt(question.content),
+    href: categoryQuestionHref(question.category.slug, question.id),
   }));
 
   const articleSnippets: StudyContentSnippet[] = articles.map((article) => ({
@@ -159,6 +161,7 @@ export async function searchStudyContent(
     title: article.title,
     categoryName: article.category.name,
     excerpt: excerpt(article.excerpt ?? article.content),
+    href: `/articles/${article.id}`,
   }));
 
   return [...questionSnippets, ...articleSnippets].slice(0, MAX_RESULTS);

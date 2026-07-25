@@ -50,7 +50,7 @@ Key packages live in \`package.json\`. Prefer that file over this table when ver
 | Categories | \`/categories\`, \`/categories/[slug]\` | Questions, quizzes, articles, and challenges per topic; completed filters |
 | Quizzes | \`/quiz\` and in-category quiz player | Multiple-choice style practice |
 | Challenges | \`/challenges\`, \`/challenges/[id]\` | In-browser playground (JS/TS and Vue runners) |
-| Ask AI | \`/chat\` + floating widget | Sign-in required; shared conversation between widget and full page |
+| Ask AI | \`/chat\` + floating widget | Available without sign-in; shared conversation between widget and full page |
 | Contextual Ask AI | Question / challenge panels | Sheet with item-specific context |
 | Read later | \`/read-later\` | Bookmarked questions |
 | Completed | \`/completed\` | Finished study items |
@@ -86,9 +86,10 @@ Design goal: one Next.js app — no separate backend service.`,
 
 **Behavior**
 
-- Requires a signed-in user
+- Available without sign-in
 - Uses \`POST /api/chat\` with the AI SDK UI message stream
 - Retrieves related study snippets (hybrid keyword search) to ground answers when possible
+- When citing study questions or articles, replies include markdown links to those items
 - Widget size is resizable and remembered in \`localStorage\`
 
 **Configuration**

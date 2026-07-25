@@ -323,13 +323,33 @@ export type MessageResponseProps = ComponentProps<typeof Streamdown>;
 
 const streamdownPlugins = { cjk, code, math, mermaid };
 
+/**
+ * Streamdown's link-safety modal mounts a <div> inside links. Markdown wraps
+ * those links in <p>, which is invalid HTML and causes hydration errors.
+ * Render paragraphs as divs so block descendants are allowed.
+ */
+const streamdownComponents = {
+  p: ({
+    children,
+    className,
+    node: _node,
+    ...props
+  }: HTMLAttributes<HTMLDivElement> & { node?: unknown }) => (
+    <div className={cn("my-3 leading-relaxed first:mt-0 last:mb-0", className)} {...props}>
+      {children}
+    </div>
+  ),
+};
+
 export const MessageResponse = memo(
-  ({ className, ...props }: MessageResponseProps) => (
+  ({ className, components, ...props }: MessageResponseProps) => (
     <Streamdown
       className={cn(
         "size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
+        "[&_a]:text-primary [&_a]:underline [&_a]:underline-offset-4",
         className
       )}
+      components={{ ...streamdownComponents, ...components }}
       plugins={streamdownPlugins}
       {...props}
     />

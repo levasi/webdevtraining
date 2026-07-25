@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { buildDeveloperChatSystemPrompt } from "@/lib/ai/system-prompt";
 
 describe("buildDeveloperChatSystemPrompt", () => {
-  it("includes retrieved sources when present", () => {
+  it("includes retrieved sources with links when present", () => {
     const prompt = buildDeveloperChatSystemPrompt({
       sources: [
         {
@@ -12,12 +12,15 @@ describe("buildDeveloperChatSystemPrompt", () => {
           title: "What is a closure?",
           categoryName: "JavaScript",
           excerpt: "A closure is a function that remembers its lexical scope.",
+          href: "/categories/javascript#question-1",
         },
       ],
     });
 
     expect(prompt).toContain("What is a closure?");
     expect(prompt).toContain("Retrieved study content");
+    expect(prompt).toContain("Link: /categories/javascript#question-1");
+    expect(prompt).toContain("always cite it as a markdown link");
   });
 
   it("falls back to general coaching without sources", () => {

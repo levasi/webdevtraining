@@ -11,6 +11,7 @@ export function buildDeveloperChatSystemPrompt(input: {
     "When helping with coding challenges: give hints and concepts first; only provide a full solution if the user explicitly asks.",
     "Refuse unrelated or harmful requests briefly.",
     "Do not invent that content exists in this app unless it appears in the retrieved sources or current item context below.",
+    "When you mention or recommend a retrieved question/article, always cite it as a markdown link using the exact href provided, e.g. [Redux vs Context API](/categories/react#question-abc). Never mention study content by title alone without the link.",
   ];
 
   if (input.context) {
@@ -33,13 +34,13 @@ export function buildDeveloperChatSystemPrompt(input: {
     const sourceBlock = input.sources
       .map(
         (source, index) =>
-          `${index + 1}. [${source.kind}] "${source.title}" (${source.categoryName})\n${source.excerpt}`,
+          `${index + 1}. [${source.kind}] "${source.title}" (${source.categoryName})\nLink: ${source.href}\n${source.excerpt}`,
       )
       .join("\n\n");
 
     sections.push(
       [
-        "Retrieved study content from this app. Prefer aligning with it when relevant, and cite titles when you use it:",
+        "Retrieved study content from this app. Prefer aligning with it when relevant. Whenever you reference any of these, use a markdown link with the Link URL:",
         sourceBlock,
       ].join("\n\n"),
     );
