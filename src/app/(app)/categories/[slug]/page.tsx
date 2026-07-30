@@ -10,6 +10,7 @@ import {
   getCompletedQuizQuestionIds,
   getResolvedChallengeIds,
 } from "@/lib/queries/progress";
+import { getPublishedQuizzes } from "@/lib/queries/quizzes";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -25,9 +26,10 @@ export default async function CategoryDetailPage({ params }: PageProps) {
   const { slug } = await params;
   const requestHeaders = await headers();
 
-  const [category, session] = await Promise.all([
+  const [category, session, quizPacks] = await Promise.all([
     getCategoryBySlug(slug),
     auth.api.getSession({ headers: requestHeaders }),
+    getPublishedQuizzes(slug),
   ]);
 
   if (!category) {
@@ -61,6 +63,7 @@ export default async function CategoryDetailPage({ params }: PageProps) {
           challenges: category.challenges,
           articles: category.articles,
         }}
+        quizPacks={quizPacks}
         completedQuestionIds={completedQuestionIds}
         completedQuizQuestionIds={completedQuizQuestionIds}
         resolvedChallengeIds={resolvedChallengeIds}

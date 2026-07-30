@@ -2,7 +2,10 @@
 
 import { useState } from "react";
 
-import { checkQuestionAnswer } from "@/actions/questions";
+import {
+  checkQuestionAnswer,
+  markQuizQuestionCompleted,
+} from "@/actions/questions";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -15,12 +18,18 @@ type QuestionAnswerPickerProps = {
   questionId: string;
   answers: AnswerOption[];
   allowMultiple?: boolean;
+  /** When set to QUIZ, correct answers are recorded as quiz progress. */
+  progressMode?: "QUIZ";
+  /** Called after a successful check (before try-again). */
+  onChecked?: (result: { isCorrect: boolean }) => void;
 };
 
 export function QuestionAnswerPicker({
   questionId,
   answers,
   allowMultiple = false,
+  progressMode,
+  onChecked,
 }: QuestionAnswerPickerProps) {
   const [selectedAnswerIds, setSelectedAnswerIds] = useState<string[]>([]);
   const [checking, setChecking] = useState(false);
@@ -61,14 +70,19 @@ export function QuestionAnswerPicker({
       answerIds: selectedAnswerIds,
     });
 
-    setChecking(false);
-
     if (!response.success) {
+      setChecking(false);
       setError(response.error);
       return;
     }
 
+    if (response.data.isCorrect && progressMode === "QUIZ") {
+      await markQuizQuestionCompleted(questionId);
+    }
+
+    setChecking(false);
     setResult(response.data);
+    onChecked?.({ isCorrect: response.data.isCorrect });
   }
 
   function handleTryAgain() {
@@ -145,6 +159,11 @@ export function QuestionAnswerPicker({
                   result.correctAnswerContents.length > 1 ? "s are" : " is"
                 }: ${result.correctAnswerContents.join(", ")}`}
           </p>
+          {result.explanation ? (
+            <p className="rounded-lg border border-border/70 bg-muted/40 px-3 py-2 text-sm leading-relaxed text-muted-foreground">
+              {result.explanation}
+            </p>
+          ) : null}
         </div>
       )}
 

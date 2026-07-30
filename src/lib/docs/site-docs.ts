@@ -48,7 +48,7 @@ Key packages live in \`package.json\`. Prefer that file over this table when ver
     markdown: `| Feature | Route | Notes |
 | --- | --- | --- |
 | Categories | \`/categories\`, \`/categories/[slug]\` | Questions, quizzes, articles, and challenges per topic; completed filters |
-| Quizzes | \`/quiz\` and in-category quiz player | Multiple-choice style practice |
+| Quizzes | \`/quiz\`, \`/quiz/[id]\`, in-category Quizzes tab | MC/TF practice, curated packs, and generate-a-random-pack |
 | Challenges | \`/challenges\`, \`/challenges/[id]\` | In-browser playground (JS/TS and Vue runners) |
 | Ask AI | \`/chat\` + floating widget | Available without sign-in; shared conversation between widget and full page |
 | Contextual Ask AI | Question / challenge panels | Sheet with item-specific context |

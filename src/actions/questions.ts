@@ -1,5 +1,9 @@
 "use server";
 
+import { headers } from "next/headers";
+import { revalidatePath } from "next/cache";
+
+import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { checkQuestionAnswerSchema } from "@/lib/validators/content";
 import type { ActionResult } from "@/types";
@@ -60,4 +64,55 @@ export async function checkQuestionAnswer(
       explanation: question.explanation,
     },
   };
+}
+
+/** Marks a quiz question completed (QUIZ mode). No-op when signed out. */
+export async function markQuizQuestionCompleted(
+  questionId: string,
+): Promise<ActionResult<{ completed: boolean }>> {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!session?.user) {
+    return { success: true, data: { completed: false } };
+  }
+
+  const question = await db.question.findUnique({
+    where: { id: questionId, isPublished: true },
+    select: { id: true },
+  });
+
+  if (!question) {
+    return { success: false, error: "Question not found." };
+  }
+
+  await db.progress.upsert({
+    where: {
+      userId_questionId_mode: {
+        userId: session.user.id,
+        questionId,
+        mode: "QUIZ",
+      },
+    },
+    create: {
+      userId: session.user.id,
+      questionId,
+      mode: "QUIZ",
+      status: "COMPLETED",
+      attempts: 1,
+      lastStudiedAt: new Date(),
+    },
+    update: {
+      status: "COMPLETED",
+      lastStudiedAt: new Date(),
+      attempts: { increment: 1 },
+    },
+  });
+
+  revalidatePath("/categories", "layout");
+  revalidatePath("/quiz");
+  revalidatePath("/completed");
+
+  return { success: true, data: { completed: true } };
 }

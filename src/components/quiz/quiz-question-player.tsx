@@ -15,11 +15,13 @@ const difficultyVariant = {
 type QuizQuestionPlayerProps = {
   question: QuestionWithAnswers;
   showBackLink?: boolean;
+  onChecked?: (result: { isCorrect: boolean }) => void;
 };
 
 export function QuizQuestionPlayer({
   question,
   showBackLink = true,
+  onChecked,
 }: QuizQuestionPlayerProps) {
   const allowMultiple =
     question.type === "MULTIPLE_CHOICE" &&
@@ -50,6 +52,8 @@ export function QuizQuestionPlayer({
           key={question.id}
           questionId={question.id}
           allowMultiple={allowMultiple}
+          progressMode="QUIZ"
+          onChecked={onChecked}
           answers={question.answers.map((answer) => ({
             id: answer.id,
             content: answer.content,

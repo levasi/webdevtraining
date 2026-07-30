@@ -144,9 +144,16 @@ async function seedQuizzes() {
       description: "Core JavaScript concepts for interviews.",
       difficulty: "INTERMEDIATE" as const,
       timeLimit: 600,
-      questionIds: ALL_SEED_QUESTIONS.filter((q) => q.categorySlug === "javascript")
-        .slice(0, 8)
-        .map((q) => q.id),
+      questionIds: [
+        "seed-js-equality",
+        "seed-js-typeof-null",
+        "seed-js-const-array",
+        "seed-js-hoisting",
+        "seed-js-optional-chaining",
+        "seed-js-nullish-coalescing",
+        "seed-js-map-vs-foreach",
+        "seed-js-set-uniqueness",
+      ],
     },
     {
       id: "seed-quiz-js-types-coercion",
@@ -174,8 +181,9 @@ async function seedQuizzes() {
         "seed-js-closure",
         "seed-js-hoisting",
         "seed-js-this-arrow",
+        "seed-js-call-apply-bind",
+        "seed-js-tdz-let",
         "seed-js-debounce",
-        "seed-js-spread-shallow",
       ],
     },
     {
@@ -188,9 +196,9 @@ async function seedQuizzes() {
       questionIds: [
         "seed-js-event-loop",
         "seed-js-promises",
-        "seed-js-json-parse",
+        "seed-js-async-await-errors",
+        "seed-js-promise-all-settled",
         "seed-js-debounce",
-        "seed-js-closure",
       ],
     },
     {
@@ -203,9 +211,10 @@ async function seedQuizzes() {
       questionIds: [
         "seed-js-map-vs-object",
         "seed-js-spread-shallow",
-        "seed-js-const-array",
+        "seed-js-set-uniqueness",
         "seed-js-json-parse",
-        "seed-js-optional-chaining",
+        "seed-js-structured-clone",
+        "seed-js-instanceof",
       ],
     },
     {
@@ -217,10 +226,10 @@ async function seedQuizzes() {
       timeLimit: 360,
       questionIds: [
         "seed-js-event-delegation",
+        "seed-js-event-phases",
         "seed-js-event-loop",
         "seed-js-this-arrow",
         "seed-js-debounce",
-        "seed-js-json-parse",
       ],
     },
     {
@@ -287,6 +296,13 @@ async function seedQuizzes() {
         create: { quizId: quiz.id, questionId, sortOrder },
       });
     }
+
+    await prisma.quizQuestion.deleteMany({
+      where: {
+        quizId: quiz.id,
+        questionId: { notIn: def.questionIds },
+      },
+    });
   }
 }
 

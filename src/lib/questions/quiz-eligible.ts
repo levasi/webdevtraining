@@ -1,11 +1,16 @@
-export function isQuizEligibleQuestion(
-  question: { answers: Array<{ id: string }> },
-) {
-  return question.answers.length > 0;
+const QUIZ_ELIGIBLE_TYPES = new Set(["MULTIPLE_CHOICE", "TRUE_FALSE"]);
+
+export function isQuizEligibleQuestion(question: {
+  type: string;
+  answers: Array<{ id: string }>;
+}) {
+  return (
+    QUIZ_ELIGIBLE_TYPES.has(question.type) && question.answers.length >= 2
+  );
 }
 
-export function filterQuizEligibleQuestions<T extends { answers: Array<{ id: string }> }>(
-  questions: T[],
-) {
+export function filterQuizEligibleQuestions<
+  T extends { type: string; answers: Array<{ id: string }> },
+>(questions: T[]) {
   return questions.filter(isQuizEligibleQuestion);
 }

@@ -12,7 +12,9 @@ import { SidebarDetailLayout } from "@/components/layout/sidebar-detail-layout";
 import { QuestionCompletionCheckbox } from "@/components/questions/question-completion-checkbox";
 import { LazyQuestionDetailPanel } from "@/components/questions/lazy-question-detail-panel";
 import { MobileQuestionFeed } from "@/components/questions/mobile-question-feed";
+import { GenerateQuizButton } from "@/components/quiz/generate-quiz-button";
 import { LazyQuizQuestionPlayer } from "@/components/quiz/lazy-quiz-question-player";
+import { QuizPackList } from "@/components/quiz/quiz-pack-list";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
@@ -23,6 +25,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DIFFICULTY_LABELS } from "@/lib/constants";
+import type { QuizPackSummary } from "@/lib/queries/quizzes";
 import { filterQuizEligibleQuestions } from "@/lib/questions/quiz-eligible";
 import { getSearchTerms } from "@/lib/search-highlight";
 import { useDebouncedValue } from "@/lib/use-debounced-value";
@@ -62,6 +65,7 @@ type CategoryContentProps = {
     challenges: Challenge[];
     articles: Article[];
   };
+  quizPacks?: QuizPackSummary[];
   completedQuestionIds?: string[];
   completedQuizQuestionIds?: string[];
   resolvedChallengeIds?: string[];
@@ -187,8 +191,147 @@ function EmptyDetail({ message }: { message: string }) {
   );
 }
 
+type QuizInnerTabsProps = {
+  categorySlug: string;
+  categoryName: string;
+  quizPacks: QuizPackSummary[];
+  quizQuestions: CategoryQuestion[];
+  visibleQuizQuestions: CategoryQuestion[];
+  filteredQuizQuestions: CategoryQuestion[];
+  searchFilteredQuizQuestions: CategoryQuestion[];
+  quizSearch: string;
+  onQuizSearchChange: (value: string) => void;
+  selectedQuizId: string | null;
+  onSelectQuizId: (id: string) => void;
+  selectedQuizQuestion: CategoryQuestion | undefined;
+  showCompleted: boolean;
+  completedIds: Set<string>;
+  onCompletionChange: (questionId: string, completed: boolean) => void;
+};
+
+type QuizSubTab = "practice" | "packs";
+
+function QuizInnerTabs({
+  categorySlug,
+  categoryName,
+  quizPacks,
+  quizQuestions,
+  visibleQuizQuestions,
+  filteredQuizQuestions,
+  searchFilteredQuizQuestions,
+  quizSearch,
+  onQuizSearchChange,
+  selectedQuizId,
+  onSelectQuizId,
+  selectedQuizQuestion,
+  showCompleted,
+  completedIds,
+  onCompletionChange,
+}: QuizInnerTabsProps) {
+  const hasPractice = quizQuestions.length > 0;
+  const canShowPacks = quizPacks.length > 0 || hasPractice;
+  const [subTab, setSubTab] = useState<QuizSubTab>(() =>
+    hasPractice ? "practice" : "packs",
+  );
+
+  return (
+    <Tabs
+      value={subTab}
+      onValueChange={(value) => {
+        if (value === "practice" || value === "packs") {
+          setSubTab(value);
+        }
+      }}
+      className="gap-4"
+    >
+      <TabsList>
+        {hasPractice ? (
+          <TabsTrigger value="practice">Practice questions</TabsTrigger>
+        ) : null}
+        {canShowPacks ? (
+          <TabsTrigger value="packs">Quiz packs</TabsTrigger>
+        ) : null}
+      </TabsList>
+
+      {hasPractice ? (
+        <TabsContent value="practice" className="mt-0">
+          <SidebarDetailLayout
+            sidebar={
+              <CategorySearchSidebar
+                searchValue={quizSearch}
+                onSearchChange={onQuizSearchChange}
+                searchPlaceholder="Search quizzes..."
+                searchAriaLabel="Search quizzes"
+                ariaLabel="Quiz questions in category"
+                items={visibleQuizQuestions.map((question) => ({
+                  id: question.id,
+                  title: question.title,
+                  difficulty: question.difficulty,
+                  subtitle: `${question.answers.length} options`,
+                }))}
+                selectedId={selectedQuizId}
+                onSelect={onSelectQuizId}
+                emptyMessage={
+                  quizQuestions.length === 0
+                    ? "No quiz questions are available in this category yet."
+                    : filteredQuizQuestions.length === 0
+                      ? "No quiz questions match the current filter."
+                      : searchFilteredQuizQuestions.length === 0
+                        ? "No quiz questions match your search."
+                        : !showCompleted
+                          ? "No incomplete quiz questions match the current filter. Check Show completed to review finished items."
+                          : "No quiz questions match the current filter."
+                }
+              />
+            }
+          >
+            {selectedQuizQuestion ? (
+              <div className="p-4 sm:p-6">
+                <div className="mb-4 flex justify-end">
+                  <QuestionCompletionCheckbox
+                    questionId={selectedQuizQuestion.id}
+                    isCompleted={completedIds.has(selectedQuizQuestion.id)}
+                    onCompletionChange={onCompletionChange}
+                  />
+                </div>
+                <LazyQuizQuestionPlayer
+                  question={selectedQuizQuestion}
+                  showBackLink={false}
+                />
+              </div>
+            ) : (
+              <EmptyDetail message="Select a quiz question from the list." />
+            )}
+          </SidebarDetailLayout>
+        </TabsContent>
+      ) : null}
+
+      {canShowPacks ? (
+        <TabsContent value="packs" className="mt-0 space-y-3 px-1">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-muted-foreground">
+              Curated sets for this category, or generate a random pack.
+            </p>
+            {hasPractice ? (
+              <GenerateQuizButton
+                categorySlug={categorySlug}
+                categoryName={categoryName}
+              />
+            ) : null}
+          </div>
+          <QuizPackList
+            quizzes={quizPacks}
+            emptyMessage="No packs yet. Generate a quiz from this category’s questions."
+          />
+        </TabsContent>
+      ) : null}
+    </Tabs>
+  );
+}
+
 export function CategoryContent({
   category,
+  quizPacks = [],
   completedQuestionIds = [],
   completedQuizQuestionIds = [],
   resolvedChallengeIds = [],
@@ -242,7 +385,7 @@ export function CategoryContent({
 
   const hasQuestions = categoryState.questions.length > 0;
   const hasChallenges = categoryState.challenges.length > 0;
-  const hasQuizzes = quizQuestions.length > 0;
+  const hasQuizzes = quizQuestions.length > 0 || quizPacks.length > 0;
   const hasArticles = categoryState.articles.length > 0;
 
   const availableTabs = useMemo(() => {
@@ -720,54 +863,23 @@ export function CategoryContent({
           className="mt-0"
           keepMounted={Boolean(visitedTabs.quizzes)}
         >
-          <SidebarDetailLayout
-            sidebar={
-              <CategorySearchSidebar
-                searchValue={quizSearch}
-                onSearchChange={setQuizSearch}
-                searchPlaceholder="Search quizzes..."
-                searchAriaLabel="Search quizzes"
-                ariaLabel="Quiz questions in category"
-                items={visibleQuizQuestions.map((question) => ({
-                  id: question.id,
-                  title: question.title,
-                  difficulty: question.difficulty,
-                  subtitle: `${question.answers.length} options`,
-                }))}
-                selectedId={selectedQuizId}
-                onSelect={setSelectedQuizId}
-                emptyMessage={
-                  quizQuestions.length === 0
-                    ? "No quiz questions are available in this category yet."
-                    : filteredQuizQuestions.length === 0
-                      ? "No quiz questions match the current filter."
-                      : searchFilteredQuizQuestions.length === 0
-                        ? "No quiz questions match your search."
-                        : !showCompleted
-                          ? "No incomplete quiz questions match the current filter. Check Show completed to review finished items."
-                          : "No quiz questions match the current filter."
-                }
-              />
-            }
-          >
-            {selectedQuizQuestion ? (
-              <div className="p-4 sm:p-6">
-                <div className="mb-4 flex justify-end">
-                  <QuestionCompletionCheckbox
-                    questionId={selectedQuizQuestion.id}
-                    isCompleted={completedIds.has(selectedQuizQuestion.id)}
-                    onCompletionChange={handleCompletionChange}
-                  />
-                </div>
-                <LazyQuizQuestionPlayer
-                  question={selectedQuizQuestion}
-                  showBackLink={false}
-                />
-              </div>
-            ) : (
-              <EmptyDetail message="Select a quiz question from the list." />
-            )}
-          </SidebarDetailLayout>
+          <QuizInnerTabs
+            categorySlug={categoryState.slug}
+            categoryName={categoryState.name}
+            quizPacks={quizPacks}
+            quizQuestions={quizQuestions}
+            visibleQuizQuestions={visibleQuizQuestions}
+            filteredQuizQuestions={filteredQuizQuestions}
+            searchFilteredQuizQuestions={searchFilteredQuizQuestions}
+            quizSearch={quizSearch}
+            onQuizSearchChange={setQuizSearch}
+            selectedQuizId={selectedQuizId}
+            onSelectQuizId={setSelectedQuizId}
+            selectedQuizQuestion={selectedQuizQuestion}
+            showCompleted={showCompleted}
+            completedIds={completedIds}
+            onCompletionChange={handleCompletionChange}
+          />
         </TabsContent>
       ) : null}
 
