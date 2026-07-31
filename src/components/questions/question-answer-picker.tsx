@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useState } from "react";
 
 import {
@@ -20,8 +21,10 @@ type QuestionAnswerPickerProps = {
   allowMultiple?: boolean;
   /** When set to QUIZ, correct answers are recorded as quiz progress. */
   progressMode?: "QUIZ";
-  /** Called after a successful check (before try-again). */
+  /** Called after a successful check. */
   onChecked?: (result: { isCorrect: boolean }) => void;
+  /** Extra actions shown under answers after a result (e.g. Next question). */
+  resultActions?: ReactNode;
 };
 
 export function QuestionAnswerPicker({
@@ -30,6 +33,7 @@ export function QuestionAnswerPicker({
   allowMultiple = false,
   progressMode,
   onChecked,
+  resultActions,
 }: QuestionAnswerPickerProps) {
   const [selectedAnswerIds, setSelectedAnswerIds] = useState<string[]>([]);
   const [checking, setChecking] = useState(false);
@@ -85,12 +89,6 @@ export function QuestionAnswerPicker({
     onChecked?.({ isCorrect: response.data.isCorrect });
   }
 
-  function handleTryAgain() {
-    setSelectedAnswerIds([]);
-    setResult(null);
-    setError(null);
-  }
-
   if (answers.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">
@@ -129,7 +127,10 @@ export function QuestionAnswerPicker({
                 "w-full rounded-lg border px-4 py-3 text-left text-sm transition-colors",
                 isSelected && !result && "border-primary bg-primary/5",
                 !isSelected && !result && "hover:bg-muted",
-                result && isCorrectAnswer && isSelected && "border-green-600 bg-green-500/10",
+                result &&
+                  isCorrectAnswer &&
+                  isSelected &&
+                  "border-green-600 bg-green-500/10",
                 isMissedCorrect && "border-green-600 bg-green-500/10",
                 isIncorrectSelection && "border-destructive bg-destructive/10",
                 result && !isSelected && !isCorrectAnswer && "opacity-60",
@@ -167,20 +168,18 @@ export function QuestionAnswerPicker({
         </div>
       )}
 
-      <div className="flex flex-wrap gap-2">
-        {!result ? (
+      {!result ? (
+        <div className="flex flex-wrap gap-2">
           <Button
             onClick={() => void handleCheck()}
             disabled={selectedAnswerIds.length === 0 || checking}
           >
             {checking ? "Checking..." : "Check answer"}
           </Button>
-        ) : (
-          <Button variant="outline" onClick={handleTryAgain}>
-            Try again
-          </Button>
-        )}
-      </div>
+        </div>
+      ) : resultActions ? (
+        <div className="flex flex-wrap gap-2">{resultActions}</div>
+      ) : null}
     </div>
   );
 }

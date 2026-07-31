@@ -1,5 +1,7 @@
 "use client";
 
+import type { ReactNode } from "react";
+
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button-link";
 import { QuestionAnswerPicker } from "@/components/questions/question-answer-picker";
@@ -16,12 +18,14 @@ type QuizQuestionPlayerProps = {
   question: QuestionWithAnswers;
   showBackLink?: boolean;
   onChecked?: (result: { isCorrect: boolean }) => void;
+  resultActions?: ReactNode;
 };
 
 export function QuizQuestionPlayer({
   question,
   showBackLink = true,
   onChecked,
+  resultActions,
 }: QuizQuestionPlayerProps) {
   const allowMultiple =
     question.type === "MULTIPLE_CHOICE" &&
@@ -37,14 +41,9 @@ export function QuizQuestionPlayer({
         <Badge variant="secondary">{question.type.replace("_", " ")}</Badge>
       </div>
 
-      <div className="space-y-2">
-        <h1 className="text-2xl font-bold leading-snug tracking-tight">
-          {question.title}
-        </h1>
-        <p className="text-sm leading-relaxed whitespace-pre-wrap text-muted-foreground">
-          {question.content}
-        </p>
-      </div>
+      <h1 className="text-2xl font-bold leading-snug tracking-tight whitespace-pre-wrap">
+        {question.content}
+      </h1>
 
       <div className="space-y-2">
         <h2 className="text-sm font-medium">Choose an answer</h2>
@@ -54,6 +53,7 @@ export function QuizQuestionPlayer({
           allowMultiple={allowMultiple}
           progressMode="QUIZ"
           onChecked={onChecked}
+          resultActions={resultActions}
           answers={question.answers.map((answer) => ({
             id: answer.id,
             content: answer.content,
