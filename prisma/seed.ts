@@ -153,6 +153,12 @@ async function seedQuizzes() {
         "seed-js-nullish-coalescing",
         "seed-js-map-vs-foreach",
         "seed-js-set-uniqueness",
+        "seed-js-code-string-concatenation",
+        "seed-js-code-return-newline",
+        "seed-js-code-null-property-access",
+        "seed-js-code-event-loop-order",
+        "seed-js-code-closure-counter",
+        "seed-js-code-var-hoist-let-block",
       ],
     },
     {
@@ -168,6 +174,8 @@ async function seedQuizzes() {
         "seed-js-const-array",
         "seed-js-nullish-coalescing",
         "seed-js-optional-chaining",
+        "seed-js-code-string-concatenation",
+        "seed-js-code-null-property-access",
       ],
     },
     {
@@ -184,6 +192,9 @@ async function seedQuizzes() {
         "seed-js-call-apply-bind",
         "seed-js-tdz-let",
         "seed-js-debounce",
+        "seed-js-code-return-newline",
+        "seed-js-code-closure-counter",
+        "seed-js-code-var-hoist-let-block",
       ],
     },
     {
@@ -199,6 +210,7 @@ async function seedQuizzes() {
         "seed-js-async-await-errors",
         "seed-js-promise-all-settled",
         "seed-js-debounce",
+        "seed-js-code-event-loop-order",
       ],
     },
     {

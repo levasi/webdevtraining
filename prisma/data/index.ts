@@ -1,4 +1,5 @@
 import { javascriptQuestions } from "./javascript";
+import { javascriptCodeReadingQuestions } from "./javascript-code-reading";
 import { javascriptInterviewbitQuestions } from "./javascript-interviewbit";
 import { typescriptQuestions, reactQuestions } from "./typescript-react";
 import { reactInterviewGuideQuestions } from "./react-interview-guide";
@@ -29,6 +30,7 @@ import type { SeedQuestion } from "./types";
 
 export const ALL_SEED_QUESTIONS: SeedQuestion[] = [
   ...javascriptQuestions,
+  ...javascriptCodeReadingQuestions,
   ...javascriptInterviewbitQuestions,
   ...typescriptQuestions,
   ...reactQuestions,
