@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 
 import { AddQuestionDialog } from "@/components/layout/add-question-dialog";
 import { ArticleDetailPanel } from "@/components/articles/article-detail-panel";
@@ -24,6 +24,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useCategoryFilters } from "@/hooks/use-category-filters";
+import type { CategoryTab, QuizSubTab } from "@/lib/category-filters";
 import { DIFFICULTY_LABELS } from "@/lib/constants";
 import type { QuizPackSummary } from "@/lib/queries/quizzes";
 import { filterQuizEligibleQuestions } from "@/lib/questions/quiz-eligible";
@@ -53,8 +55,6 @@ const ChallengeDetailPanel = dynamic(
 );
 
 type CategoryQuestion = CategoryQuestionSummary;
-
-type CategoryTab = "questions" | "challenges" | "quizzes" | "articles";
 
 type CategoryContentProps = {
   category: {
@@ -207,9 +207,9 @@ type QuizInnerTabsProps = {
   showCompleted: boolean;
   completedIds: Set<string>;
   onCompletionChange: (questionId: string, completed: boolean) => void;
+  quizSubTab: QuizSubTab;
+  onQuizSubTabChange: (value: QuizSubTab) => void;
 };
-
-type QuizSubTab = "practice" | "packs";
 
 function QuizInnerTabs({
   categorySlug,
@@ -227,19 +227,24 @@ function QuizInnerTabs({
   showCompleted,
   completedIds,
   onCompletionChange,
+  quizSubTab,
+  onQuizSubTabChange,
 }: QuizInnerTabsProps) {
   const hasPractice = quizQuestions.length > 0;
   const canShowPacks = quizPacks.length > 0 || hasPractice;
-  const [subTab, setSubTab] = useState<QuizSubTab>(() =>
-    hasPractice ? "practice" : "packs",
-  );
+  const subTab =
+    quizSubTab === "packs" && canShowPacks
+      ? "packs"
+      : hasPractice
+        ? "practice"
+        : "packs";
 
   return (
     <Tabs
       value={subTab}
       onValueChange={(value) => {
         if (value === "practice" || value === "packs") {
-          setSubTab(value);
+          onQuizSubTabChange(value);
         }
       }}
       className="gap-4"
@@ -329,7 +334,19 @@ function QuizInnerTabs({
   );
 }
 
-export function CategoryContent({
+export function CategoryContent(props: CategoryContentProps) {
+  return (
+    <Suspense
+      fallback={
+        <div className="h-12 animate-pulse rounded-xl border border-border/80 bg-muted/40" />
+      }
+    >
+      <CategoryContentInner {...props} />
+    </Suspense>
+  );
+}
+
+function CategoryContentInner({
   category,
   quizPacks = [],
   completedQuestionIds = [],
@@ -344,27 +361,6 @@ export function CategoryContent({
     setCategoryState(category);
   }, [category]);
 
-  useEffect(() => {
-    setQuestionSearch("");
-    setChallengeSearch("");
-    setQuizSearch("");
-  }, [category.id]);
-  const [activeTab, setActiveTab] = useState<CategoryTab>(() =>
-    getFirstAvailableTab(categoryState),
-  );
-  const [visitedTabs, setVisitedTabs] = useState<Partial<Record<CategoryTab, boolean>>>(
-    () => ({ [getFirstAvailableTab(categoryState)]: true }),
-  );
-  const [difficultyFilter, setDifficultyFilter] =
-    useState<DifficultyFilter>("ALL");
-  const [sort, setSort] = useState<CategorySortOption>("difficulty-asc");
-  const [questionSearch, setQuestionSearch] = useState("");
-  const debouncedQuestionSearch = useDebouncedValue(questionSearch, 250);
-  const [challengeSearch, setChallengeSearch] = useState("");
-  const debouncedChallengeSearch = useDebouncedValue(challengeSearch, 250);
-  const [quizSearch, setQuizSearch] = useState("");
-  const debouncedQuizSearch = useDebouncedValue(quizSearch, 250);
-  const [showCompleted, setShowCompleted] = useState(true);
   const [completedIds, setCompletedIds] = useState(
     () => new Set(completedQuestionIds),
   );
@@ -410,11 +406,41 @@ export function CategoryContent({
     return tabs;
   }, [hasQuestions, hasArticles, hasChallenges, hasQuizzes]);
 
+  const {
+    tab: activeTab,
+    setTab: setActiveTab,
+    difficulty: difficultyFilter,
+    setDifficulty: setDifficultyFilter,
+    sort,
+    setSort,
+    showCompleted,
+    setShowCompleted,
+    quizSubTab,
+    setQuizSubTab,
+  } = useCategoryFilters(availableTabs);
+
+  const [questionSearch, setQuestionSearch] = useState("");
+  const [challengeSearch, setChallengeSearch] = useState("");
+  const [quizSearch, setQuizSearch] = useState("");
+  const debouncedQuestionSearch = useDebouncedValue(questionSearch, 250);
+  const debouncedChallengeSearch = useDebouncedValue(challengeSearch, 250);
+  const debouncedQuizSearch = useDebouncedValue(quizSearch, 250);
+
   useEffect(() => {
-    if (!availableTabs.includes(activeTab) && availableTabs.length > 0) {
+    setQuestionSearch("");
+    setChallengeSearch("");
+    setQuizSearch("");
+  }, [category.id]);
+
+  const [visitedTabs, setVisitedTabs] = useState<
+    Partial<Record<CategoryTab, boolean>>
+  >(() => ({ [getFirstAvailableTab(categoryState)]: true }));
+
+  useEffect(() => {
+    if (availableTabs.length > 0 && !availableTabs.includes(activeTab)) {
       setActiveTab(availableTabs[0]);
     }
-  }, [activeTab, availableTabs]);
+  }, [activeTab, availableTabs, setActiveTab]);
 
   useEffect(() => {
     setVisitedTabs((current) =>
@@ -879,6 +905,8 @@ export function CategoryContent({
             showCompleted={showCompleted}
             completedIds={completedIds}
             onCompletionChange={handleCompletionChange}
+            quizSubTab={quizSubTab}
+            onQuizSubTabChange={setQuizSubTab}
           />
         </TabsContent>
       ) : null}
