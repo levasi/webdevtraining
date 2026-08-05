@@ -223,9 +223,13 @@ export function CreateQuestionForm({
   function handleTypeChange(nextType: CreateQuestionInput["type"]) {
     setType(nextType);
 
-    if (nextType === "EXPLANATION") {
+    const nextIsLongForm =
+      nextType === "EXPLANATION" || nextType === "FLASHCARD";
+    const currentIsLongForm = type === "EXPLANATION" || type === "FLASHCARD";
+
+    if (nextIsLongForm && !currentIsLongForm) {
       setAnswers(defaultExplanationAnswer);
-    } else if (type === "EXPLANATION") {
+    } else if (!nextIsLongForm && currentIsLongForm) {
       setAnswers(defaultAnswers);
     }
   }
@@ -293,7 +297,8 @@ export function CreateQuestionForm({
     navigateTo("/admin/questions");
   }
 
-  const showExplanationRules = type === "EXPLANATION";
+  const showExplanationRules =
+    type === "EXPLANATION" || type === "FLASHCARD";
   const showMultipleChoiceRules = type === "MULTIPLE_CHOICE";
   const showTrueFalseRules = type === "TRUE_FALSE";
   const showAnswerControls = !showExplanationRules;

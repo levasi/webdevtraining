@@ -238,7 +238,7 @@
 
 .rich-text-content pre,
 .tiptap pre {
-  @apply overflow-x-auto rounded-lg border bg-muted/50 p-3 font-mono text-[0.9em] text-foreground;
+  @apply overflow-x-auto rounded-lg border bg-muted/50 p-3 font-mono text-[0.9em] whitespace-pre text-foreground;
 }
 
 .rich-text-content pre code,

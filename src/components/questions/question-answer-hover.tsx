@@ -1,5 +1,6 @@
 "use client";
 
+import { RichTextContent } from "@/components/editor/rich-text-content";
 import {
   HoverCard,
   HoverCardContent,
@@ -9,6 +10,11 @@ import {
   getQuestionAnswerPreview,
   hasQuestionAnswerPreview,
 } from "@/lib/questions/answer-preview";
+import {
+  coerceAnswerToRichHtml,
+  isProbablyHtml,
+  looksLikeMarkdown,
+} from "@/lib/rich-text";
 import { cn } from "@/lib/utils";
 import type { QuestionWithAnswers } from "@/types";
 
@@ -28,6 +34,10 @@ export function QuestionAnswerHover({
   }
 
   const { answers } = getQuestionAnswerPreview(question);
+  const renderRich =
+    question.type === "EXPLANATION" ||
+    question.type === "FLASHCARD" ||
+    answers.some((answer) => isProbablyHtml(answer) || looksLikeMarkdown(answer));
 
   return (
     <HoverCard>
@@ -49,11 +59,23 @@ export function QuestionAnswerHover({
           </p>
           <ul className="space-y-1.5">
             {answers.map((answer) => (
-              <li key={answer} className="leading-relaxed whitespace-pre-wrap">
-                {answers.length > 1 ? (
-                  <span className="mr-1.5 text-muted-foreground">•</span>
-                ) : null}
-                {answer}
+              <li
+                key={answer}
+                className={cn(
+                  "leading-relaxed",
+                  !renderRich && "whitespace-pre-wrap",
+                )}
+              >
+                {renderRich ? (
+                  <RichTextContent html={coerceAnswerToRichHtml(answer)} />
+                ) : (
+                  <>
+                    {answers.length > 1 ? (
+                      <span className="mr-1.5 text-muted-foreground">•</span>
+                    ) : null}
+                    {answer}
+                  </>
+                )}
               </li>
             ))}
           </ul>

@@ -185,21 +185,34 @@ export function DeveloperChat({
                   >
                     <MessageContent>
                       {message.parts.map((part, index) => {
-                        if (part.type === "text") {
+                        if (part.type !== "text") {
+                          return null;
+                        }
+
+                        // User prompts are plain text (often pasted code) —
+                        // don't run them through markdown.
+                        if (message.role === "user") {
                           return (
-                            <MessageResponse
+                            <div
                               key={`${message.id}-${index}`}
-                              isAnimating={
-                                isBusy &&
-                                message.role === "assistant" &&
-                                index === message.parts.length - 1
-                              }
+                              className="whitespace-pre-wrap break-words"
                             >
                               {part.text}
-                            </MessageResponse>
+                            </div>
                           );
                         }
-                        return null;
+
+                        return (
+                          <MessageResponse
+                            key={`${message.id}-${index}`}
+                            isAnimating={
+                              isBusy &&
+                              index === message.parts.length - 1
+                            }
+                          >
+                            {part.text}
+                          </MessageResponse>
+                        );
                       })}
                     </MessageContent>
                   </Message>

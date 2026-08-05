@@ -124,7 +124,7 @@ export function QuestionAnswerPicker({
               disabled={!!result}
               onClick={() => toggleAnswer(answer.id)}
               className={cn(
-                "w-full rounded-lg border px-4 py-3 text-left text-sm transition-colors",
+                "w-full rounded-lg border px-4 py-3 text-left text-sm whitespace-pre-wrap transition-colors",
                 isSelected && !result && "border-primary bg-primary/5",
                 !isSelected && !result && "hover:bg-muted",
                 result &&

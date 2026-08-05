@@ -26,7 +26,7 @@ import {
 import { DIFFICULTY_LABELS } from "@/lib/constants";
 import { loadQuestionFormCategories } from "@/lib/question-form-categories-cache";
 import { getQuestionAnswerPreview } from "@/lib/questions/answer-preview";
-import { isRichTextEmpty } from "@/lib/rich-text";
+import { coerceAnswerToRichHtml, isRichTextEmpty } from "@/lib/rich-text";
 import { highlightSearchMatches } from "@/lib/search-highlight";
 import { cn, wrapLongTextClass } from "@/lib/utils";
 import type { QuestionWithAnswers } from "@/types";
@@ -56,13 +56,18 @@ type EditableAnswer = {
   content: string;
 };
 
+function usesRichAnswerEditor(type: QuestionWithAnswers["type"]): boolean {
+  return type === "EXPLANATION" || type === "FLASHCARD";
+}
+
 function getEditableAnswers(question: QuestionWithAnswers): EditableAnswer[] {
+  const rich = usesRichAnswerEditor(question.type);
   return [...question.answers]
     .filter((answer) => answer.isCorrect)
     .sort((a, b) => a.sortOrder - b.sortOrder)
     .map((answer) => ({
       id: answer.id,
-      content: answer.content,
+      content: rich ? coerceAnswerToRichHtml(answer.content) : answer.content,
     }));
 }
 
@@ -167,7 +172,7 @@ export const QuestionDetailPanel = memo(function QuestionDetailPanel({
     setError(null);
 
     if (
-      displayQuestion.type === "EXPLANATION" &&
+      usesRichAnswerEditor(displayQuestion.type) &&
       editableAnswers.some((answer) => isRichTextEmpty(answer.content))
     ) {
       setError("Write an explanation before saving.");
@@ -386,7 +391,7 @@ export const QuestionDetailPanel = memo(function QuestionDetailPanel({
             <Label>{answerLabel}</Label>
             {editableAnswers.length > 0 ? (
               editableAnswers.map((answer) =>
-                displayQuestion.type === "EXPLANATION" ? (
+                usesRichAnswerEditor(displayQuestion.type) ? (
                   <RichTextEditor
                     key={answer.id}
                     id={`answer-${answer.id}`}
@@ -402,7 +407,7 @@ export const QuestionDetailPanel = memo(function QuestionDetailPanel({
                     onChange={(event) =>
                       updateAnswerContent(answer.id, event.target.value)
                     }
-                    className="min-h-20"
+                    className="min-h-20 whitespace-pre-wrap font-mono text-sm"
                     required
                   />
                 ),

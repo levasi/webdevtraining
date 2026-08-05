@@ -110,7 +110,8 @@ export async function markQuizQuestionCompleted(
     },
   });
 
-  revalidatePath("/categories", "layout");
+  // Avoid revalidating /categories here — soft refresh remounts practice
+  // quiz pickers mid-answer. Progress pages still update on next visit.
   revalidatePath("/quiz");
   revalidatePath("/completed");
 

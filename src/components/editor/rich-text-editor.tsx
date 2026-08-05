@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import { Table } from "@tiptap/extension-table";
@@ -9,6 +9,7 @@ import { TableCell } from "@tiptap/extension-table-cell";
 import { TableHeader } from "@tiptap/extension-table-header";
 import { TableRow } from "@tiptap/extension-table-row";
 import { EditorContent, useEditor } from "@tiptap/react";
+import type { Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import {
   Bold,
@@ -26,7 +27,13 @@ import {
   Unlink,
 } from "lucide-react";
 
-import { sanitizeRichText } from "@/lib/rich-text";
+import {
+  looksLikeCodeSnippet,
+  looksLikeMarkdown,
+  plainTextToRichHtml,
+  sanitizeRichText,
+  shouldPreferPlainTextPaste,
+} from "@/lib/rich-text";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -75,6 +82,7 @@ export function RichTextEditor({
   editorClassName,
   id,
 }: RichTextEditorProps) {
+  const editorRef = useRef<Editor | null>(null);
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
@@ -103,11 +111,50 @@ export function RichTextEditor({
           editorClassName,
         ),
       },
+      transformPastedHTML(html) {
+        return sanitizeRichText(html);
+      },
+      handlePaste(_view, event) {
+        const clipboard = event.clipboardData;
+        if (!clipboard) {
+          return false;
+        }
+
+        const text = clipboard.getData("text/plain");
+        if (!text) {
+          return false;
+        }
+
+        const html = clipboard.getData("text/html");
+        if (
+          !html ||
+          shouldPreferPlainTextPaste(html) ||
+          looksLikeMarkdown(text) ||
+          looksLikeCodeSnippet(text)
+        ) {
+          event.preventDefault();
+          editorRef.current
+            ?.chain()
+            .focus()
+            .insertContent(sanitizeRichText(plainTextToRichHtml(text)))
+            .run();
+          return true;
+        }
+
+        return false;
+      },
+    },
+    onCreate: ({ editor: created }) => {
+      editorRef.current = created;
     },
     onUpdate: ({ editor: currentEditor }) => {
       onChange(sanitizeRichText(currentEditor.getHTML()));
     },
   });
+
+  useEffect(() => {
+    editorRef.current = editor;
+  }, [editor]);
 
   useEffect(() => {
     if (!editor) {

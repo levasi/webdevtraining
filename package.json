@@ -60,6 +60,7 @@
     "dotenv": "^17.4.2",
     "embla-carousel-react": "^8.6.0",
     "lucide-react": "^1.20.0",
+    "marked": "^15.0.12",
     "media-chrome": "^4.19.2",
     "monaco-editor": "^0.56.0",
     "motion": "^12.42.2",
