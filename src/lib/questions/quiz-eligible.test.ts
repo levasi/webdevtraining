@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   filterQuizEligibleQuestions,
+  filterStudyQuestions,
   isQuizEligibleQuestion,
 } from "@/lib/questions/quiz-eligible";
 
@@ -60,6 +61,10 @@ describe("quiz eligibility", () => {
     expect(filterQuizEligibleQuestions(questions).map((q) => q.id)).toEqual([
       "q3",
       "q4",
+    ]);
+    expect(filterStudyQuestions(questions).map((q) => q.id)).toEqual([
+      "q1",
+      "q2",
     ]);
   });
 });

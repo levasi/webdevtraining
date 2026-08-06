@@ -14,3 +14,10 @@ export function filterQuizEligibleQuestions<
 >(questions: T[]) {
   return questions.filter(isQuizEligibleQuestion);
 }
+
+/** Study/interview questions — excludes MC/TF items reserved for Quizzes. */
+export function filterStudyQuestions<
+  T extends { type: string; answers: Array<{ id: string }> },
+>(questions: T[]) {
+  return questions.filter((question) => !isQuizEligibleQuestion(question));
+}

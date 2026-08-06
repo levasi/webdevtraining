@@ -28,7 +28,10 @@ import { useCategoryFilters } from "@/hooks/use-category-filters";
 import type { CategoryTab, QuizSubTab } from "@/lib/category-filters";
 import { DIFFICULTY_LABELS } from "@/lib/constants";
 import type { QuizPackSummary } from "@/lib/queries/quizzes";
-import { filterQuizEligibleQuestions } from "@/lib/questions/quiz-eligible";
+import {
+  filterQuizEligibleQuestions,
+  filterStudyQuestions,
+} from "@/lib/questions/quiz-eligible";
 import { getSearchTerms } from "@/lib/search-highlight";
 import { useDebouncedValue } from "@/lib/use-debounced-value";
 import {
@@ -147,7 +150,7 @@ function challengeMatchesSearch(
 }
 
 function getFirstAvailableTab(category: CategoryContentProps["category"]): CategoryTab {
-  if (category.questions.length > 0) {
+  if (filterStudyQuestions(category.questions).length > 0) {
     return "questions";
   }
 
@@ -159,7 +162,9 @@ function getFirstAvailableTab(category: CategoryContentProps["category"]): Categ
     return "challenges";
   }
 
-  if (filterQuizEligibleQuestions(category.questions).length > 0) {
+  if (
+    filterQuizEligibleQuestions(category.questions).length > 0
+  ) {
     return "quizzes";
   }
 
@@ -379,7 +384,12 @@ function CategoryContentInner({
     [categoryState.questions],
   );
 
-  const hasQuestions = categoryState.questions.length > 0;
+  const studyQuestions = useMemo(
+    () => filterStudyQuestions(categoryState.questions),
+    [categoryState.questions],
+  );
+
+  const hasQuestions = studyQuestions.length > 0;
   const hasChallenges = categoryState.challenges.length > 0;
   const hasQuizzes = quizQuestions.length > 0 || quizPacks.length > 0;
   const hasArticles = categoryState.articles.length > 0;
@@ -449,9 +459,9 @@ function CategoryContentInner({
   }, [activeTab]);
 
   const filteredQuestions = useMemo(() => {
-    const items = filterByDifficulty(categoryState.questions, difficultyFilter);
+    const items = filterByDifficulty(studyQuestions, difficultyFilter);
     return sortCategoryItems(items, sort);
-  }, [categoryState.questions, difficultyFilter, sort]);
+  }, [studyQuestions, difficultyFilter, sort]);
 
   const searchFilteredQuestions = useMemo(() => {
     const query = debouncedQuestionSearch.trim().toLowerCase();
