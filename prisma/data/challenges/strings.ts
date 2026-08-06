@@ -215,4 +215,54 @@ export const stringChallenges: SeedChallenge[] = [
     ],
     hints: ["Loop over each character.", "Increment counts in an object."],
   },
+  {
+    id: "seed-challenge-jewels-and-stones",
+    categorySlug: "javascript",
+    title: "Jewels and Stones",
+    description: [
+      "You're given strings jewels (types of stones that are jewels) and stones (the stones you have).",
+      "Return how many of the stones you have are also jewels.",
+      "Letters are case sensitive, so \"a\" differs from \"A\".",
+      "Input is [jewels, stones]. All characters in jewels are unique.",
+    ].join(" "),
+    difficulty: "BEGINNER",
+    starterCode: `function solve(input) {
+  const [jewels, stones] = input;
+  // return count of stones that are jewels
+}`,
+    solutionCode: `function solve(input) {
+  const [jewels, stones] = input;
+  const jewelSet = new Set(jewels);
+  let count = 0;
+  for (const stone of stones) {
+    if (jewelSet.has(stone)) count += 1;
+  }
+  return count;
+}`,
+    testCases: [
+      {
+        input: ["aA", "aAAbbbb"],
+        expectedOutput: 3,
+        description: "Three jewels: a, A, A",
+      },
+      {
+        input: ["z", "ZZ"],
+        expectedOutput: 0,
+        description: "Case sensitive — z is not Z",
+      },
+      {
+        input: ["abc", "aabbcc"],
+        expectedOutput: 6,
+      },
+      {
+        input: ["A", "aAAa"],
+        expectedOutput: 2,
+      },
+    ],
+    hints: [
+      "Put jewel characters in a Set for O(1) lookups.",
+      "Count how many characters in stones appear in that Set.",
+      "Do not ignore case — 'a' and 'A' are different.",
+    ],
+  },
 ];
