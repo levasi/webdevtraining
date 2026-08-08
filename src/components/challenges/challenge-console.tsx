@@ -83,8 +83,9 @@ export function ChallengeConsole({
       >
         {empty ? (
           <p className="m-1 text-[#8a8276]">
-            Logs from <code className="text-teal-100">console.log</code> and
-            test runs appear here.
+            Use <code className="text-teal-100">Run</code> for{" "}
+            <code className="text-teal-100">console.log</code> output, or{" "}
+            <code className="text-teal-100">Run tests</code> for the suite.
           </p>
         ) : (
           <ul className="flex flex-col gap-0.5">

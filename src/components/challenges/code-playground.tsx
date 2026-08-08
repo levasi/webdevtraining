@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
-import { Check, Copy, Lightbulb, Play, RotateCcw } from "lucide-react";
+import { Check, Copy, Lightbulb, Play, RotateCcw, Terminal } from "lucide-react";
 
 import { ChallengeConsole } from "@/components/challenges/challenge-console";
 import { CodeEditor } from "@/components/challenges/code-editor";
@@ -26,7 +26,10 @@ import {
   loadChallengeDraft,
   saveChallengeDraft,
 } from "@/lib/challenges/draft-storage";
-import { runChallengeLocally } from "@/lib/challenges/run-locally";
+import {
+  executeChallengeCode,
+  runChallengeLocally,
+} from "@/lib/challenges/run-locally";
 import { cn } from "@/lib/utils";
 import type { TestCase, TestResult } from "@/types";
 
@@ -38,8 +41,80 @@ const VueLivePreview = dynamic(
   { ssr: false },
 );
 
+const EDITOR_HEIGHT_KEY = "wdt:challenge-editor-height";
+const CONSOLE_HEIGHT_KEY = "wdt:challenge-console-height";
+const EDITOR_MIN_HEIGHT = 120;
+const EDITOR_MAX_HEIGHT = 900;
+const EDITOR_DEFAULT_HEIGHT = 280;
+const CONSOLE_MIN_HEIGHT = 96;
+const CONSOLE_MAX_HEIGHT = 560;
+const CONSOLE_DEFAULT_HEIGHT = 180;
+const RESIZE_HANDLE_HEIGHT = 8;
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function loadStoredHeight(key: string, fallback: number, min: number, max: number) {
+  if (typeof window === "undefined") return fallback;
+  const raw = window.localStorage.getItem(key);
+  const parsed = raw ? Number(raw) : NaN;
+  return Number.isFinite(parsed) ? clamp(parsed, min, max) : fallback;
+}
+
 function formatValue(value: unknown): string {
   return JSON.stringify(value, null, 2);
+}
+
+type PanelResizeHandleProps = {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  onDragStart: (event: React.PointerEvent<HTMLDivElement>) => void;
+  onDragMove: (event: React.PointerEvent<HTMLDivElement>) => void;
+  onDragEnd: (event: React.PointerEvent<HTMLDivElement>) => void;
+  onNudge: (delta: number) => void;
+};
+
+function PanelResizeHandle({
+  label,
+  value,
+  min,
+  max,
+  onDragStart,
+  onDragMove,
+  onDragEnd,
+  onNudge,
+}: PanelResizeHandleProps) {
+  return (
+    <div
+      role="separator"
+      aria-orientation="horizontal"
+      aria-label={label}
+      aria-valuemin={min}
+      aria-valuemax={max}
+      aria-valuenow={value}
+      tabIndex={0}
+      onPointerDown={onDragStart}
+      onPointerMove={onDragMove}
+      onPointerUp={onDragEnd}
+      onPointerCancel={onDragEnd}
+      onKeyDown={(event) => {
+        if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return;
+        event.preventDefault();
+        // ArrowDown grows the panel above this handle (drag-down metaphor).
+        onNudge(event.key === "ArrowDown" ? 24 : -24);
+      }}
+      className="group flex shrink-0 cursor-row-resize items-center justify-center border-t border-border bg-[#ebe4d6]/50 transition-colors hover:bg-[#ebe4d6] focus-visible:bg-[#ebe4d6] focus-visible:outline-none"
+      style={{ height: RESIZE_HANDLE_HEIGHT }}
+    >
+      <span
+        aria-hidden
+        className="h-1 w-10 rounded-full bg-[#8a8276]/55 group-hover:bg-[#8a8276] group-focus-visible:bg-[#8a8276]"
+      />
+    </div>
+  );
 }
 
 type CodePlaygroundProps = {
@@ -76,6 +151,17 @@ export function CodePlayground({
   const [logs, setLogs] = useState<ConsoleEntry[]>([]);
   const [copied, setCopied] = useState(false);
   const [runError, setRunError] = useState<string | null>(null);
+  const [runningCode, setRunningCode] = useState(false);
+  const [editorHeight, setEditorHeight] = useState(EDITOR_DEFAULT_HEIGHT);
+  const [consoleHeight, setConsoleHeight] = useState(CONSOLE_DEFAULT_HEIGHT);
+  const editorDragRef = useRef<{ startY: number; startHeight: number } | null>(
+    null,
+  );
+  const consoleDragRef = useRef<{ startY: number; startHeight: number } | null>(
+    null,
+  );
+  const editorHeightRef = useRef(editorHeight);
+  const consoleHeightRef = useRef(consoleHeight);
   const logIdRef = useRef(0);
   const router = useRouter();
   const isXl = useIsXl();
@@ -84,6 +170,33 @@ export function CodePlayground({
   const hintsRemaining = hints.length - hintIndex;
   const showVuePreview =
     isVue && Boolean(meta.filename?.endsWith(".vue") || code.includes("<template"));
+
+  useEffect(() => {
+    setEditorHeight(
+      loadStoredHeight(
+        EDITOR_HEIGHT_KEY,
+        EDITOR_DEFAULT_HEIGHT,
+        EDITOR_MIN_HEIGHT,
+        EDITOR_MAX_HEIGHT,
+      ),
+    );
+    setConsoleHeight(
+      loadStoredHeight(
+        CONSOLE_HEIGHT_KEY,
+        CONSOLE_DEFAULT_HEIGHT,
+        CONSOLE_MIN_HEIGHT,
+        CONSOLE_MAX_HEIGHT,
+      ),
+    );
+  }, []);
+
+  useEffect(() => {
+    editorHeightRef.current = editorHeight;
+  }, [editorHeight]);
+
+  useEffect(() => {
+    consoleHeightRef.current = consoleHeight;
+  }, [consoleHeight]);
 
   useEffect(() => {
     setCode(loadChallengeDraft(challengeId, starterCode));
@@ -124,6 +237,86 @@ export function CodePlayground({
     await navigator.clipboard.writeText(code);
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1500);
+  }
+
+  function beginResize(
+    target: "editor" | "console",
+    event: React.PointerEvent<HTMLDivElement>,
+  ) {
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    const draft = {
+      startY: event.clientY,
+      startHeight:
+        target === "editor"
+          ? editorHeightRef.current
+          : consoleHeightRef.current,
+    };
+    if (target === "editor") editorDragRef.current = draft;
+    else consoleDragRef.current = draft;
+  }
+
+  function moveResize(
+    target: "editor" | "console",
+    event: React.PointerEvent<HTMLDivElement>,
+  ) {
+    const drag =
+      target === "editor" ? editorDragRef.current : consoleDragRef.current;
+    if (!drag) return;
+    // Dragging the handle downward grows the panel above it.
+    const next = clamp(
+      drag.startHeight + (event.clientY - drag.startY),
+      target === "editor" ? EDITOR_MIN_HEIGHT : CONSOLE_MIN_HEIGHT,
+      target === "editor" ? EDITOR_MAX_HEIGHT : CONSOLE_MAX_HEIGHT,
+    );
+    if (target === "editor") {
+      editorHeightRef.current = next;
+      setEditorHeight(next);
+    } else {
+      consoleHeightRef.current = next;
+      setConsoleHeight(next);
+    }
+  }
+
+  function endResize(
+    target: "editor" | "console",
+    event: React.PointerEvent<HTMLDivElement>,
+  ) {
+    const drag =
+      target === "editor" ? editorDragRef.current : consoleDragRef.current;
+    if (!drag) return;
+    if (target === "editor") editorDragRef.current = null;
+    else consoleDragRef.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    window.localStorage.setItem(
+      target === "editor" ? EDITOR_HEIGHT_KEY : CONSOLE_HEIGHT_KEY,
+      String(
+        target === "editor"
+          ? editorHeightRef.current
+          : consoleHeightRef.current,
+      ),
+    );
+  }
+
+  function nudgeHeight(target: "editor" | "console", delta: number) {
+    const next = clamp(
+      (target === "editor"
+        ? editorHeightRef.current
+        : consoleHeightRef.current) + delta,
+      target === "editor" ? EDITOR_MIN_HEIGHT : CONSOLE_MIN_HEIGHT,
+      target === "editor" ? EDITOR_MAX_HEIGHT : CONSOLE_MAX_HEIGHT,
+    );
+    if (target === "editor") {
+      editorHeightRef.current = next;
+      setEditorHeight(next);
+      window.localStorage.setItem(EDITOR_HEIGHT_KEY, String(next));
+    } else {
+      consoleHeightRef.current = next;
+      setConsoleHeight(next);
+      window.localStorage.setItem(CONSOLE_HEIGHT_KEY, String(next));
+    }
   }
 
   const runMutation = useMutation({
@@ -277,8 +470,72 @@ export function CodePlayground({
     },
   });
 
+  async function runCodeOnly() {
+    if (isVue || runningCode || runMutation.isPending || !hydrated) return;
+
+    setRunningCode(true);
+    setRunError(null);
+    setLogs([]);
+    logIdRef.current = 0;
+
+    const sample = displayCases[0];
+    const input = sample?.input;
+
+    try {
+      await withConsoleCapture(pushLog, () => {
+        pushLog({
+          level: "system",
+          message: sample
+            ? `Running solve() with first test input${sample.description ? ` (${sample.description})` : ""}…`
+            : "Running code…",
+          time: Date.now(),
+        });
+
+        const result = executeChallengeCode(code, input);
+
+        if (result.error) {
+          pushLog({
+            level: "error",
+            message: result.error,
+            time: Date.now(),
+          });
+          setRunError(result.error);
+          return;
+        }
+
+        if (result.invokedSolve) {
+          pushLog({
+            level: "info",
+            message: `← ${formatValue(result.output)}`,
+            time: Date.now(),
+          });
+        } else {
+          pushLog({
+            level: "warn",
+            message:
+              "No solve(input) function found — only top-level code ran.",
+            time: Date.now(),
+          });
+        }
+
+        pushLog({
+          level: "system",
+          message: "Done",
+          time: Date.now(),
+        });
+      });
+    } finally {
+      setRunningCode(false);
+    }
+  }
+
   const editorColumn = (
-    <section className="flex h-full min-h-[280px] flex-col overflow-hidden rounded-[10px] border border-border bg-card shadow-[0_18px_40px_-28px_rgb(28_25_21_/_0.45)] sm:min-h-[420px]">
+    <section
+      className={cn(
+        "flex min-h-0 flex-col overflow-y-auto rounded-[10px] border border-border bg-card shadow-[0_18px_40px_-28px_rgb(28_25_21_/_0.45)]",
+        isXl ? "h-full" : "h-auto",
+      )}
+    >
       <header className="flex shrink-0 flex-col gap-2.5 border-b border-border bg-[#ebe4d6]/70 px-2.5 py-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-3 sm:px-3.5 sm:py-2.5">
         <p className="text-sm text-muted-foreground">
           {isVue ? (
@@ -348,11 +605,24 @@ export function CodePlayground({
           >
             {showSolution ? "Hide solution" : "Solution"}
           </Button>
+          {!isVue && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => void runCodeOnly()}
+              disabled={runningCode || runMutation.isPending || !hydrated}
+              className="gap-1.5"
+            >
+              <Terminal className="size-3.5" />
+              {runningCode ? "Running…" : "Run"}
+            </Button>
+          )}
           <Button
             type="button"
             size="sm"
             onClick={() => runMutation.mutate()}
-            disabled={runMutation.isPending || !hydrated}
+            disabled={runMutation.isPending || runningCode || !hydrated}
             className="gap-1.5"
           >
             <Play className="size-3.5" />
@@ -362,28 +632,54 @@ export function CodePlayground({
         </div>
       </header>
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <div className="shrink-0" style={{ height: editorHeight }}>
         {hydrated ? (
           <CodeEditor
             value={code}
             onChange={handleCodeChange}
             language={editorLanguage}
+            height={editorHeight}
             path={`challenges/${challengeId}.${isVue ? (meta.filename?.endsWith(".ts") ? "ts" : "vue") : "js"}`}
           />
         ) : (
-          <p className="grid min-h-[220px] place-items-center text-sm text-muted-foreground">
+          <p className="grid h-full place-items-center text-sm text-muted-foreground">
             Loading editor…
           </p>
         )}
       </div>
 
-      <div className="shrink-0">
+      <PanelResizeHandle
+        label="Resize editor"
+        value={editorHeight}
+        min={EDITOR_MIN_HEIGHT}
+        max={EDITOR_MAX_HEIGHT}
+        onDragStart={(event) => beginResize("editor", event)}
+        onDragMove={(event) => moveResize("editor", event)}
+        onDragEnd={(event) => endResize("editor", event)}
+        onNudge={(delta) => nudgeHeight("editor", delta)}
+      />
+
+      <div
+        className="flex shrink-0 flex-col"
+        style={{ height: consoleHeight }}
+      >
         <ChallengeConsole
           entries={logs}
           onClear={() => setLogs([])}
-          className="h-[min(22dvh,180px)] min-h-[100px] sm:h-[min(28vh,220px)] sm:min-h-[120px]"
+          className="min-h-0 flex-1"
         />
       </div>
+
+      <PanelResizeHandle
+        label="Resize console"
+        value={consoleHeight}
+        min={CONSOLE_MIN_HEIGHT}
+        max={CONSOLE_MAX_HEIGHT}
+        onDragStart={(event) => beginResize("console", event)}
+        onDragMove={(event) => moveResize("console", event)}
+        onDragEnd={(event) => endResize("console", event)}
+        onNudge={(delta) => nudgeHeight("console", delta)}
+      />
 
       <footer className="shrink-0 space-y-3 border-t border-border bg-[#f3efe6] px-2.5 py-2.5 sm:px-3.5 sm:py-3">
         {runError && (

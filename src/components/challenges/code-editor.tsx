@@ -15,7 +15,9 @@ loader.config({
 });
 
 const CHALLENGE_THEME = "challenge-lab";
-const MIN_HEIGHT = 220;
+/** Roughly 4 lines + Monaco padding — used when auto-sizing. */
+const MIN_HEIGHT = 96;
+const HEIGHT_BUFFER = 8;
 
 type CodeEditorProps = {
   value: string;
@@ -24,6 +26,8 @@ type CodeEditorProps = {
   path?: string;
   className?: string;
   minHeight?: number;
+  /** When set, editor uses this height (scrolls internally) instead of auto-growing. */
+  height?: number;
 };
 
 export function CodeEditor({
@@ -33,33 +37,59 @@ export function CodeEditor({
   path = "challenge.js",
   className,
   minHeight = MIN_HEIGHT,
+  height: controlledHeight,
 }: CodeEditorProps) {
+  const isControlled = controlledHeight != null;
   const containerRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<MonacoEditor.IStandaloneCodeEditor | null>(null);
   const ignoreLayoutRef = useRef(false);
   const minHeightRef = useRef(minHeight);
+  const heightRef = useRef(controlledHeight ?? minHeight);
+  const controlledRef = useRef(isControlled);
   const [ready, setReady] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [height, setHeight] = useState(minHeight);
+  const [autoHeight, setAutoHeight] = useState(minHeight);
+
+  const height = isControlled ? controlledHeight : autoHeight;
 
   minHeightRef.current = minHeight;
+  controlledRef.current = isControlled;
+  heightRef.current = height;
 
-  const syncHeight = (editor: MonacoEditor.IStandaloneCodeEditor) => {
-    if (ignoreLayoutRef.current) return;
-
-    const contentHeight = editor.getContentHeight();
-    const next = Math.max(minHeightRef.current, contentHeight);
+  const layoutEditor = (
+    editor: MonacoEditor.IStandaloneCodeEditor,
+    nextHeight: number,
+  ) => {
     const width =
       containerRef.current?.clientWidth || editor.getLayoutInfo().width;
 
-    setHeight(next);
+    if (
+      Math.abs(heightRef.current - nextHeight) < 1 &&
+      Math.abs(editor.getLayoutInfo().height - nextHeight) < 1 &&
+      Math.abs(editor.getLayoutInfo().width - width) < 1
+    ) {
+      return;
+    }
+
+    heightRef.current = nextHeight;
+    if (!controlledRef.current) {
+      setAutoHeight(nextHeight);
+    }
 
     ignoreLayoutRef.current = true;
     try {
-      editor.layout({ width, height: next });
+      editor.layout({ width, height: nextHeight });
     } finally {
-      ignoreLayoutRef.current = false;
+      requestAnimationFrame(() => {
+        ignoreLayoutRef.current = false;
+      });
     }
+  };
+
+  const syncAutoHeight = (editor: MonacoEditor.IStandaloneCodeEditor) => {
+    if (ignoreLayoutRef.current || controlledRef.current) return;
+    const contentHeight = editor.getContentHeight() + HEIGHT_BUFFER;
+    layoutEditor(editor, Math.max(minHeightRef.current, contentHeight));
   };
 
   const handleBeforeMount: BeforeMount = (monaco) => {
@@ -90,10 +120,14 @@ export function CodeEditor({
   const handleMount: OnMount = (editor) => {
     editorRef.current = editor;
     setReady(true);
-    syncHeight(editor);
+    if (controlledRef.current) {
+      layoutEditor(editor, heightRef.current);
+    } else {
+      syncAutoHeight(editor);
+    }
     editor.onDidContentSizeChange(() => {
       if (editorRef.current === editor) {
-        syncHeight(editor);
+        syncAutoHeight(editor);
       }
     });
   };
@@ -116,7 +150,12 @@ export function CodeEditor({
 
     const observer = new ResizeObserver(() => {
       const editor = editorRef.current;
-      if (editor) syncHeight(editor);
+      if (!editor) return;
+      if (controlledRef.current) {
+        layoutEditor(editor, heightRef.current);
+      } else {
+        syncAutoHeight(editor);
+      }
     });
     observer.observe(el);
     return () => observer.disconnect();
@@ -124,8 +163,13 @@ export function CodeEditor({
 
   useEffect(() => {
     const editor = editorRef.current;
-    if (editor) syncHeight(editor);
-  }, [value, minHeight]);
+    if (!editor) return;
+    if (isControlled) {
+      layoutEditor(editor, controlledHeight);
+    } else {
+      syncAutoHeight(editor);
+    }
+  }, [value, minHeight, isControlled, controlledHeight]);
 
   return (
     <div
@@ -171,10 +215,10 @@ export function CodeEditor({
           hideCursorInOverviewRuler: true,
           overviewRulerBorder: false,
           scrollbar: {
-            vertical: "hidden",
+            vertical: isControlled ? "auto" : "hidden",
             horizontal: "auto",
             alwaysConsumeMouseWheel: false,
-            verticalScrollbarSize: 0,
+            verticalScrollbarSize: isControlled ? 10 : 0,
             horizontalScrollbarSize: 10,
           },
         }}

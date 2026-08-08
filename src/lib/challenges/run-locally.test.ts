@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { runChallengeLocally } from "@/lib/challenges/run-locally";
+import {
+  executeChallengeCode,
+  runChallengeLocally,
+} from "@/lib/challenges/run-locally";
 
 describe("runChallengeLocally", () => {
   it("passes when solve returns the expected output", () => {
@@ -31,5 +34,27 @@ describe("runChallengeLocally", () => {
 
     expect(result.passed).toBe(false);
     expect(result.results[0]?.error).toMatch(/boom/);
+  });
+});
+
+describe("executeChallengeCode", () => {
+  it("returns solve output for a single input", () => {
+    const result = executeChallengeCode(
+      "function solve(input) { return input.nums.length; }",
+      { nums: [1, 2, 3], k: 2 },
+    );
+
+    expect(result.error).toBeUndefined();
+    expect(result.invokedSolve).toBe(true);
+    expect(result.output).toBe(3);
+  });
+
+  it("reports runtime errors", () => {
+    const result = executeChallengeCode(
+      "function solve() { throw new Error('nope'); }",
+      null,
+    );
+
+    expect(result.error).toMatch(/nope/);
   });
 });

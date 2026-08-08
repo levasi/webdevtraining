@@ -422,4 +422,308 @@ export const arrayChallenges: SeedChallenge[] = [
     ],
     hints: ["Loop or reduce over the array.", "Increment counts in an object."],
   },
+  {
+    id: "seed-challenge-two-sum",
+    categorySlug: "javascript",
+    title: "Two Sum",
+    description: [
+      "Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.",
+      "Each input has exactly one solution. You may not use the same element twice.",
+      "You can return the indices in any order.",
+      "Input is { nums, target }.",
+      "Follow-up: aim for better than O(n²) time.",
+    ].join(" "),
+    difficulty: "BEGINNER",
+    starterCode: `function solve(input) {
+  const { nums, target } = input;
+  // return [i, j] such that nums[i] + nums[j] === target
+}`,
+    solutionCode: `function solve(input) {
+  const { nums, target } = input;
+  const seen = new Map();
+  for (let i = 0; i < nums.length; i += 1) {
+    const complement = target - nums[i];
+    if (seen.has(complement)) {
+      return [seen.get(complement), i];
+    }
+    seen.set(nums[i], i);
+  }
+  return [];
+}`,
+    testCases: [
+      {
+        input: { nums: [2, 7, 11, 15], target: 9 },
+        expectedOutput: [0, 1],
+        description: "nums[0] + nums[1] === 9",
+      },
+      {
+        input: { nums: [3, 2, 4], target: 6 },
+        expectedOutput: [1, 2],
+      },
+      {
+        input: { nums: [3, 3], target: 6 },
+        expectedOutput: [0, 1],
+      },
+      {
+        input: { nums: [-1, -2, -3, -4, -5], target: -8 },
+        expectedOutput: [2, 4],
+      },
+    ],
+    hints: [
+      "A nested loop works but is O(n²).",
+      "Use a Map from value → index while scanning once.",
+      "For each number, check whether target - number was already seen.",
+    ],
+  },
+  {
+    id: "seed-challenge-product-except-self",
+    categorySlug: "javascript",
+    title: "Product of Array Except Self",
+    description: [
+      "Given an integer array nums, return an array answer such that answer[i] is equal to the product of all the elements of nums except nums[i].",
+      "",
+      "The product of any prefix or suffix of nums is guaranteed to fit in a 32-bit integer.",
+      "You must write an algorithm that runs in O(n) time and without using the division operation.",
+      "",
+      "Example: [1,2,3,4] → [24,12,8,6]. [-1,1,0,-3,3] → [0,0,9,0,0].",
+      "",
+      "Input is the array nums. Return the answer array.",
+      "Follow-up: can you do it in O(1) extra space (not counting the output array)?",
+    ].join("\n"),
+    difficulty: "INTERMEDIATE",
+    starterCode: `/**
+ * @param {number[]} nums
+ * @return {number[]}
+ */
+function productExceptSelf(nums) {
+  // return product of all elements except self at each index (no division)
+}
+
+function solve(input) {
+  return productExceptSelf(input);
+}`,
+    solutionCode: `/**
+ * @param {number[]} nums
+ * @return {number[]}
+ */
+function productExceptSelf(nums) {
+  const n = nums.length;
+  const answer = new Array(n).fill(1);
+
+  let prefix = 1;
+  for (let i = 0; i < n; i += 1) {
+    answer[i] = prefix;
+    prefix *= nums[i];
+  }
+
+  let suffix = 1;
+  for (let i = n - 1; i >= 0; i -= 1) {
+    answer[i] *= suffix;
+    suffix *= nums[i];
+  }
+
+  return answer;
+}
+
+function solve(input) {
+  return productExceptSelf(input);
+}`,
+    testCases: [
+      {
+        input: [1, 2, 3, 4],
+        expectedOutput: [24, 12, 8, 6],
+        description: "Classic prefix/suffix products",
+      },
+      {
+        input: [-1, 1, 0, -3, 3],
+        expectedOutput: [0, 0, 9, 0, 0],
+        description: "Zero in the array",
+      },
+      {
+        input: [2, 3],
+        expectedOutput: [3, 2],
+        description: "Minimum length",
+      },
+      {
+        input: [0, 0],
+        expectedOutput: [0, 0],
+        description: "Two zeros",
+      },
+      {
+        input: [5, 1, 1, 1],
+        expectedOutput: [1, 5, 5, 5],
+      },
+      {
+        input: [-1, -1, -1, -1],
+        expectedOutput: [-1, -1, -1, -1],
+      },
+    ],
+    hints: [
+      "answer[i] = (product of everything left of i) × (product of everything right of i).",
+      "First pass: fill answer with prefix products.",
+      "Second pass from the right: multiply in suffix products — no division needed.",
+    ],
+  },
+  {
+    id: "seed-challenge-contains-duplicate",
+    categorySlug: "javascript",
+    title: "Contains Duplicate",
+    description: [
+      "Given an integer array nums, return true if any value appears at least twice in the array,",
+      "and return false if every element is distinct.",
+      "",
+      "Example: [1,2,3,1] → true. [1,2,3,4] → false. [1,1,1,3,3,4,3,2,4,2] → true.",
+      "",
+      "Input is the array nums. Return a boolean.",
+    ].join("\n"),
+    difficulty: "BEGINNER",
+    starterCode: `/**
+ * @param {number[]} nums
+ * @return {boolean}
+ */
+function containsDuplicate(nums) {
+  // return true if any value appears at least twice
+}
+
+function solve(input) {
+  return containsDuplicate(input);
+}`,
+    solutionCode: `/**
+ * @param {number[]} nums
+ * @return {boolean}
+ */
+function containsDuplicate(nums) {
+  const seen = new Set();
+  for (const num of nums) {
+    if (seen.has(num)) return true;
+    seen.add(num);
+  }
+  return false;
+}
+
+function solve(input) {
+  return containsDuplicate(input);
+}`,
+    testCases: [
+      {
+        input: [1, 2, 3, 1],
+        expectedOutput: true,
+        description: "1 appears at indices 0 and 3",
+      },
+      {
+        input: [1, 2, 3, 4],
+        expectedOutput: false,
+        description: "All distinct",
+      },
+      {
+        input: [1, 1, 1, 3, 3, 4, 3, 2, 4, 2],
+        expectedOutput: true,
+      },
+      {
+        input: [1],
+        expectedOutput: false,
+        description: "Single element",
+      },
+      {
+        input: [0, 0],
+        expectedOutput: true,
+      },
+      {
+        input: [-1, -2, -3, -1],
+        expectedOutput: true,
+      },
+    ],
+    hints: [
+      "Track values you have already seen.",
+      "A Set gives O(1) average lookups.",
+      "If you try to add a value that is already in the Set, you found a duplicate.",
+    ],
+  },
+  {
+    id: "seed-challenge-top-k-frequent",
+    categorySlug: "javascript",
+    title: "Top K Frequent Elements",
+    description: [
+      "Given an integer array nums and an integer k, return the k most frequent elements.",
+      "You may return the answer in any order.",
+      "",
+      "Example: nums = [1,1,1,2,2,3], k = 2 → [1,2].",
+      "",
+      "Input is { nums, k }. Return an array of k integers.",
+      "Tests sort the result for comparison, so any order passes.",
+      "Follow-up: aim for better than O(n log n) time.",
+    ].join("\n"),
+    difficulty: "INTERMEDIATE",
+    starterCode: `/**
+ * @param {number[]} nums
+ * @param {number} k
+ * @return {number[]}
+ */
+function topKFrequent(nums, k) {
+  // return the k most frequent elements
+}
+
+function solve(input) {
+  const { nums, k } = input;
+  return topKFrequent(nums, k).slice().sort((a, b) => a - b);
+}`,
+    solutionCode: `/**
+ * @param {number[]} nums
+ * @param {number} k
+ * @return {number[]}
+ */
+function topKFrequent(nums, k) {
+  const freq = new Map();
+  for (const num of nums) {
+    freq.set(num, (freq.get(num) || 0) + 1);
+  }
+
+  const buckets = Array.from({ length: nums.length + 1 }, () => []);
+  for (const [num, count] of freq) {
+    buckets[count].push(num);
+  }
+
+  const result = [];
+  for (let i = buckets.length - 1; i >= 0 && result.length < k; i -= 1) {
+    for (const num of buckets[i]) {
+      result.push(num);
+      if (result.length === k) return result;
+    }
+  }
+  return result;
+}
+
+function solve(input) {
+  const { nums, k } = input;
+  return topKFrequent(nums, k).slice().sort((a, b) => a - b);
+}`,
+    testCases: [
+      {
+        input: { nums: [1, 1, 1, 2, 2, 3], k: 2 },
+        expectedOutput: [1, 2],
+        description: "1 appears 3 times, 2 appears 2 times",
+      },
+      {
+        input: { nums: [1], k: 1 },
+        expectedOutput: [1],
+      },
+      {
+        input: { nums: [1, 2, 1, 2, 1, 2, 3, 1, 3, 2], k: 2 },
+        expectedOutput: [1, 2],
+      },
+      {
+        input: { nums: [4, 1, -1, 2, -1, 2, 3], k: 2 },
+        expectedOutput: [-1, 2],
+      },
+      {
+        input: { nums: [5, 5, 5, 5], k: 1 },
+        expectedOutput: [5],
+      },
+    ],
+    hints: [
+      "Count frequencies with a Map.",
+      "Bucket sort by frequency (index = count) to avoid a full n log n sort.",
+      "Collect from the highest-frequency buckets until you have k values.",
+    ],
+  },
 ];

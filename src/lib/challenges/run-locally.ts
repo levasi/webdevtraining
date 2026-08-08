@@ -8,6 +8,43 @@ function runUserCode(code: string, input: unknown): unknown {
   return fn(input);
 }
 
+export type ExecuteChallengeResult = {
+  output: unknown;
+  error?: string;
+  /** True when `solve` was defined and invoked. */
+  invokedSolve: boolean;
+};
+
+/**
+ * Run challenge code once (for console / return-value inspection).
+ * Calls `solve(input)` when defined; otherwise still evaluates the script body.
+ */
+export function executeChallengeCode(
+  code: string,
+  input: unknown = undefined,
+): ExecuteChallengeResult {
+  try {
+    const fn = new Function(
+      "input",
+      `"use strict";\n${code}\nreturn {
+        invokedSolve: typeof solve === "function",
+        output: typeof solve === "function" ? solve(input) : undefined,
+      };`,
+    );
+    const result = fn(input) as { invokedSolve: boolean; output: unknown };
+    return {
+      output: result.output,
+      invokedSolve: result.invokedSolve,
+    };
+  } catch (error) {
+    return {
+      output: undefined,
+      invokedSolve: false,
+      error: error instanceof Error ? error.message : "Runtime error",
+    };
+  }
+}
+
 /** Run challenge test cases in the browser (captures console.log via withConsoleCapture). */
 export function runChallengeLocally(
   code: string,
@@ -17,7 +54,8 @@ export function runChallengeLocally(
     try {
       const actualOutput = runUserCode(code, testCase.input);
       const passed =
-        JSON.stringify(actualOutput) === JSON.stringify(testCase.expectedOutput);
+        JSON.stringify(actualOutput) ===
+        JSON.stringify(testCase.expectedOutput);
 
       return {
         ...testCase,

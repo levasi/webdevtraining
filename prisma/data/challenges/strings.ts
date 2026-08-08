@@ -265,4 +265,94 @@ export const stringChallenges: SeedChallenge[] = [
       "Do not ignore case — 'a' and 'A' are different.",
     ],
   },
+  {
+    id: "seed-challenge-group-anagrams",
+    categorySlug: "javascript",
+    title: "Group Anagrams",
+    description: [
+      "Given an array of strings strs, group the anagrams together.",
+      "You can return the answer in any order.",
+      "",
+      'Example: ["eat","tea","tan","ate","nat","bat"] → groups like ["bat"], ["nat","tan"], ["ate","eat","tea"].',
+      "",
+      "Input is the array strs. Return an array of groups (arrays of strings).",
+      "Tests normalize group and item order, so any valid grouping passes.",
+    ].join("\n"),
+    difficulty: "INTERMEDIATE",
+    starterCode: `/**
+ * @param {string[]} strs
+ * @return {string[][]}
+ */
+function groupAnagrams(strs) {
+  // return groups of anagrams
+}
+
+function normalizeGroups(groups) {
+  return groups
+    .map((group) => [...group].sort())
+    .sort((a, b) => a.join("\\0").localeCompare(b.join("\\0")));
+}
+
+function solve(input) {
+  return normalizeGroups(groupAnagrams(input));
+}`,
+    solutionCode: `/**
+ * @param {string[]} strs
+ * @return {string[][]}
+ */
+function groupAnagrams(strs) {
+  const map = new Map();
+  for (const str of strs) {
+    const key = [...str].sort().join("");
+    if (!map.has(key)) map.set(key, []);
+    map.get(key).push(str);
+  }
+  return [...map.values()];
+}
+
+function normalizeGroups(groups) {
+  return groups
+    .map((group) => [...group].sort())
+    .sort((a, b) => a.join("\\0").localeCompare(b.join("\\0")));
+}
+
+function solve(input) {
+  return normalizeGroups(groupAnagrams(input));
+}`,
+    testCases: [
+      {
+        input: ["eat", "tea", "tan", "ate", "nat", "bat"],
+        expectedOutput: [
+          ["ate", "eat", "tea"],
+          ["bat"],
+          ["nat", "tan"],
+        ],
+        description: "Classic anagram groups",
+      },
+      {
+        input: [""],
+        expectedOutput: [[""]],
+        description: "Single empty string",
+      },
+      {
+        input: ["a"],
+        expectedOutput: [["a"]],
+        description: "Single character",
+      },
+      {
+        input: ["abc", "bca", "cab", "xyz", "zyx", "foo"],
+        expectedOutput: [["abc", "bca", "cab"], ["foo"], ["xyz", "zyx"]],
+      },
+      {
+        input: ["", ""],
+        expectedOutput: [["", ""]],
+        description: "Two empty strings are anagrams",
+      },
+    ],
+    hints: [
+      "Anagrams share the same characters when sorted — use that as a map key.",
+      "Group strings in a Map from sorted-key → list of originals.",
+      "Return the Map values; the harness sorts groups for comparison.",
+    ],
+  },
 ];
