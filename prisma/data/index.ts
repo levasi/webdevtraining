@@ -27,6 +27,7 @@ import {
   performanceQuestions,
   systemDesignQuestions,
 } from "./quality-architecture";
+import { uiSystemDesignQuestions } from "./ui-system-design";
 import type { SeedQuestion } from "./types";
 
 export const ALL_SEED_QUESTIONS: SeedQuestion[] = [
@@ -53,6 +54,7 @@ export const ALL_SEED_QUESTIONS: SeedQuestion[] = [
   ...securityQuestions,
   ...performanceQuestions,
   ...systemDesignQuestions,
+  ...uiSystemDesignQuestions,
 ];
 
 export function questionsByCategory(slug: string): SeedQuestion[] {

@@ -35,6 +35,7 @@ Questions are **TypeScript seed data**, not markdown files.
 | `security` | `prisma/data/quality-architecture.ts` | `securityQuestions` |
 | `performance` | `prisma/data/quality-architecture.ts` | `performanceQuestions` |
 | `system-design` | `prisma/data/quality-architecture.ts` | `systemDesignQuestions` |
+| `ui-system-design` | `prisma/data/ui-system-design.ts` | `uiSystemDesignQuestions` |
 
 ### Topics without a dedicated category
 
@@ -44,8 +45,9 @@ Use the closest existing category and descriptive tags until a new category is a
 |-----------------|--------------|--------------|
 | Playwright, Jest, Cypress | `testing` | `playwright`, `jest`, `cypress` |
 | WebSockets, GraphQL | `rest-apis` or `nodejs` | `websockets`, `graphql` |
-| Accessibility | `html` | `a11y`, `accessibility` |
-| Frontend Architecture | `system-design` | `architecture`, `microfrontends` |
+| Accessibility | `html` or `ui-system-design` | `a11y`, `accessibility` |
+| Frontend Architecture | `system-design` or `ui-system-design` | `architecture`, `microfrontends` |
+| Design systems, tokens, component APIs | `ui-system-design` | `design-tokens`, `theming` |
 | CI/CD | `git` or `system-design` | `ci-cd`, `github-actions` |
 | AI Assisted Development | `testing` or `system-design` | `ai`, `copilot` |
 | Angular | Add category first (see below) | `angular` |

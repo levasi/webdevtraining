@@ -17,6 +17,7 @@ export const CATEGORIES = [
   { name: "Security", slug: "security", icon: "shield" },
   { name: "Performance", slug: "performance", icon: "zap" },
   { name: "System Design", slug: "system-design", icon: "layers" },
+  { name: "UI System Design", slug: "ui-system-design", icon: "layout" },
 ] as const;
 
 export const DIFFICULTY_LABELS = {
