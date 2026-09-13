@@ -7,6 +7,7 @@ const footerLinks = [
   { href: "/chat", label: "Ask AI" },
   { href: "/quiz", label: "Quizzes" },
   { href: "/challenges", label: "Challenges" },
+  { href: "/playground", label: "Playground" },
   { href: "/resources", label: "Resources" },
   { href: "/docs", label: "Docs" },
 ];

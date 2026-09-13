@@ -4,10 +4,7 @@ import type { ReactNode } from "react";
 import { useEffect, useRef } from "react";
 import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
-import { Table } from "@tiptap/extension-table";
-import { TableCell } from "@tiptap/extension-table-cell";
-import { TableHeader } from "@tiptap/extension-table-header";
-import { TableRow } from "@tiptap/extension-table-row";
+import { TableKit } from "@tiptap/extension-table";
 import { EditorContent, useEditor } from "@tiptap/react";
 import type { Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -28,9 +25,11 @@ import {
 } from "lucide-react";
 
 import {
+  htmlContainsTable,
   looksLikeCodeSnippet,
   looksLikeMarkdown,
   plainTextToRichHtml,
+  prepareRichTextHtml,
   sanitizeRichText,
   shouldPreferPlainTextPaste,
 } from "@/lib/rich-text";
@@ -83,6 +82,7 @@ export function RichTextEditor({
   id,
 }: RichTextEditorProps) {
   const editorRef = useRef<Editor | null>(null);
+  const lastEmittedHtmlRef = useRef<string | null>(null);
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
@@ -97,22 +97,26 @@ export function RichTextEditor({
         },
       }),
       Placeholder.configure({ placeholder }),
-      Table.configure({ resizable: false }),
-      TableRow,
-      TableHeader,
-      TableCell,
+      TableKit.configure({
+        table: {
+          resizable: true,
+          handleWidth: 6,
+          cellMinWidth: 48,
+          lastColumnResizable: true,
+        },
+      }),
     ],
     content: value,
     editorProps: {
       attributes: {
         ...(id ? { id } : {}),
         class: cn(
-          "min-h-32 px-3 py-2 text-sm leading-relaxed outline-none",
+          "tiptap min-h-32 px-3 py-2 text-sm leading-relaxed outline-none",
           editorClassName,
         ),
       },
       transformPastedHTML(html) {
-        return sanitizeRichText(html);
+        return prepareRichTextHtml(html);
       },
       handlePaste(_view, event) {
         const clipboard = event.clipboardData;
@@ -120,12 +124,31 @@ export function RichTextEditor({
           return false;
         }
 
+        const html = clipboard.getData("text/html");
         const text = clipboard.getData("text/plain");
+
+        // Always normalize table HTML ourselves so TipTap gets a rectangular table.
+        if (html && htmlContainsTable(html)) {
+          event.preventDefault();
+          const prepared = prepareRichTextHtml(html);
+          const current = editorRef.current;
+          if (!current) {
+            return true;
+          }
+
+          current
+            .chain()
+            .focus()
+            .insertContent(prepared)
+            .fixTables()
+            .run();
+          return true;
+        }
+
         if (!text) {
           return false;
         }
 
-        const html = clipboard.getData("text/html");
         if (
           !html ||
           shouldPreferPlainTextPaste(html) ||
@@ -146,9 +169,12 @@ export function RichTextEditor({
     },
     onCreate: ({ editor: created }) => {
       editorRef.current = created;
+      lastEmittedHtmlRef.current = sanitizeRichText(created.getHTML());
     },
     onUpdate: ({ editor: currentEditor }) => {
-      onChange(sanitizeRichText(currentEditor.getHTML()));
+      const next = sanitizeRichText(currentEditor.getHTML());
+      lastEmittedHtmlRef.current = next;
+      onChange(next);
     },
   });
 
@@ -162,11 +188,21 @@ export function RichTextEditor({
     }
 
     const sanitizedValue = sanitizeRichText(value);
-    const currentHtml = sanitizeRichText(editor.getHTML());
 
-    if (sanitizedValue !== currentHtml) {
-      editor.commands.setContent(sanitizedValue, { emitUpdate: false });
+    // Don't re-apply HTML we just emitted — that recreates the doc and
+    // breaks ProseMirror table maps (e.g. while resizing columns).
+    if (sanitizedValue === lastEmittedHtmlRef.current) {
+      return;
     }
+
+    const currentHtml = sanitizeRichText(editor.getHTML());
+    if (sanitizedValue === currentHtml) {
+      lastEmittedHtmlRef.current = sanitizedValue;
+      return;
+    }
+
+    editor.commands.setContent(sanitizedValue, { emitUpdate: false });
+    lastEmittedHtmlRef.current = sanitizedValue;
   }, [editor, value]);
 
   if (!editor) {

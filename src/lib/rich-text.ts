@@ -23,15 +23,45 @@ const ALLOWED_TAGS = [
   "tr",
   "th",
   "td",
+  "colgroup",
+  "col",
+  "div",
 ];
+
+const WIDTH_STYLE = [/^\d+(?:\.\d+)?(?:px|%)?$/];
 
 const SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
   allowedTags: ALLOWED_TAGS,
   allowedAttributes: {
     a: ["href", "target", "rel"],
     code: ["class"],
-    th: ["colspan", "rowspan"],
-    td: ["colspan", "rowspan"],
+    div: ["class"],
+    table: ["style"],
+    colgroup: ["style"],
+    col: ["style", "span", "width"],
+    th: ["colspan", "rowspan", "colwidth", "style"],
+    td: ["colspan", "rowspan", "colwidth", "style"],
+  },
+  allowedClasses: {
+    div: ["tableWrapper"],
+  },
+  allowedStyles: {
+    table: {
+      width: WIDTH_STYLE,
+      "min-width": WIDTH_STYLE,
+    },
+    col: {
+      width: WIDTH_STYLE,
+      "min-width": WIDTH_STYLE,
+    },
+    th: {
+      width: WIDTH_STYLE,
+      "min-width": WIDTH_STYLE,
+    },
+    td: {
+      width: WIDTH_STYLE,
+      "min-width": WIDTH_STYLE,
+    },
   },
 };
 
@@ -42,6 +72,118 @@ marked.setOptions({
 
 export function sanitizeRichText(html: string): string {
   return sanitizeHtml(html, SANITIZE_OPTIONS);
+}
+
+/** True when clipboard HTML includes a table we should keep as HTML. */
+export function htmlContainsTable(html: string): boolean {
+  return /<table[\s>]/i.test(html);
+}
+
+function cellContentToParagraphs(cell: Element): string {
+  const clone = cell.cloneNode(true) as Element;
+  clone.querySelectorAll("table").forEach((nested) => nested.remove());
+
+  const blocks = [
+    ...clone.querySelectorAll(":scope > p, :scope > ul, :scope > ol, :scope > pre, :scope > blockquote, :scope > h2, :scope > h3"),
+  ];
+
+  if (blocks.length > 0) {
+    return sanitizeRichText(blocks.map((block) => block.outerHTML).join(""));
+  }
+
+  const inline = sanitizeRichText(`<p>${clone.innerHTML}</p>`);
+  return inline.trim() ? inline : "<p></p>";
+}
+
+/**
+ * Rebuild pasted tables into a rectangular TipTap-safe shape.
+ * Uneven rows / colspan / nested junk from Docs/Word break ProseMirror table maps.
+ */
+export function normalizePastedTables(html: string): string {
+  if (!htmlContainsTable(html) || typeof DOMParser === "undefined") {
+    return html;
+  }
+
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  const tables = [...doc.body.querySelectorAll("table")].filter(
+    (table) => !table.parentElement?.closest("table"),
+  );
+
+  for (const table of tables) {
+    const rows = [
+      ...table.querySelectorAll(
+        ":scope > thead > tr, :scope > tbody > tr, :scope > tr",
+      ),
+    ] as HTMLTableRowElement[];
+
+    const normalizedRows = rows.map((row) => {
+      const cellElements = [
+        ...row.querySelectorAll(":scope > th, :scope > td"),
+      ];
+      const isHeaderRow =
+        row.parentElement?.tagName === "THEAD" ||
+        (cellElements.length > 0 &&
+          cellElements.every((cell) => cell.tagName === "TH"));
+
+      const cells: string[] = [];
+      for (const cell of cellElements) {
+        const colspan = Math.min(
+          20,
+          Math.max(
+            1,
+            Number.parseInt(cell.getAttribute("colspan") ?? "1", 10) || 1,
+          ),
+        );
+        const content = cellContentToParagraphs(cell);
+        cells.push(content);
+        for (let i = 1; i < colspan; i += 1) {
+          cells.push("<p></p>");
+        }
+      }
+
+      return { isHeaderRow, cells };
+    });
+
+    const columnCount = normalizedRows.reduce(
+      (max, row) => Math.max(max, row.cells.length),
+      0,
+    );
+
+    if (columnCount === 0) {
+      table.remove();
+      continue;
+    }
+
+    const nextTable = doc.createElement("table");
+    const tbody = doc.createElement("tbody");
+
+    normalizedRows.forEach((row, rowIndex) => {
+      while (row.cells.length < columnCount) {
+        row.cells.push("<p></p>");
+      }
+
+      const tr = doc.createElement("tr");
+      for (const content of row.cells) {
+        const cell = doc.createElement(
+          row.isHeaderRow || rowIndex === 0 ? "th" : "td",
+        );
+        cell.innerHTML = content;
+        tr.appendChild(cell);
+      }
+
+      tbody.appendChild(tr);
+    });
+
+    nextTable.appendChild(tbody);
+    table.replaceWith(nextTable);
+  }
+
+  return doc.body.innerHTML;
+}
+
+/** Sanitize + normalize tables for editor paste/storage round-trips. */
+export function prepareRichTextHtml(html: string): string {
+  return normalizePastedTables(sanitizeRichText(html));
 }
 
 export function escapeHtml(text: string): string {
@@ -141,6 +283,12 @@ export function coerceAnswerToRichHtml(content: string): string {
 export function shouldPreferPlainTextPaste(html: string): boolean {
   if (!html.trim()) {
     return true;
+  }
+
+  // Keep real tables as HTML — plain-text conversion destroys structure and
+  // produces broken TipTap table maps ("No cell with offset …").
+  if (htmlContainsTable(html)) {
+    return false;
   }
 
   if (

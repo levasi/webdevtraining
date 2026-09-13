@@ -3,10 +3,13 @@ import { describe, expect, it } from "vitest";
 import {
   coerceAnswerToRichHtml,
   getRichTextPlainText,
+  htmlContainsTable,
   isRichTextEmpty,
   looksLikeCodeSnippet,
   looksLikeMarkdown,
+  normalizePastedTables,
   plainTextToRichHtml,
+  prepareRichTextHtml,
   sanitizeRichText,
   shouldPreferPlainTextPaste,
 } from "@/lib/rich-text";
@@ -31,6 +34,49 @@ describe("rich-text helpers", () => {
     expect(html).toContain("<th");
     expect(html).toContain("<td");
     expect(html).toContain("A");
+  });
+
+  it("preserves table column widths from the editor", () => {
+    const html = sanitizeRichText(
+      '<div class="tableWrapper"><table style="width: 480px"><colgroup><col style="width: 160px"><col style="width: 320px"></colgroup><tbody><tr><td colwidth="160">A</td><td colwidth="320">B</td></tr></tbody></table></div>',
+    );
+
+    expect(html).toContain("tableWrapper");
+    expect(html).toContain("colgroup");
+    expect(html).toMatch(/width:\s*160px/);
+    expect(html).toContain('colwidth="160"');
+  });
+
+  it("keeps table HTML instead of forcing plain-text paste", () => {
+    expect(
+      shouldPreferPlainTextPaste(
+        '<table class="MsoNormal"><tr><td><span>A</span></td><td><span>B</span></td></tr></table>',
+      ),
+    ).toBe(false);
+    expect(htmlContainsTable("<p>Hi</p><table><tr><td>x</td></tr></table>")).toBe(
+      true,
+    );
+  });
+
+  it("normalizes uneven pasted tables into a rectangle", () => {
+    const html = normalizePastedTables(
+      "<table><tr><td>A</td><td colspan='2'>B</td></tr><tr><td>C</td></tr></table>",
+    );
+
+    expect(html).toContain("<table");
+    expect(html.match(/<tr>/g)?.length).toBe(2);
+    expect(html.match(/<t[hd]>/g)?.length).toBe(6);
+    expect(html).toContain("<p>A</p>");
+    expect(html).toContain("<p>C</p>");
+  });
+
+  it("prepareRichTextHtml sanitizes and normalizes tables", () => {
+    const html = prepareRichTextHtml(
+      '<table><tr><td onclick="alert(1)">Hi<script>x</script></td></tr></table>',
+    );
+    expect(html).toContain("<p>Hi</p>");
+    expect(html).not.toContain("script");
+    expect(html).not.toContain("onclick");
   });
 
   it("detects empty rich text", () => {

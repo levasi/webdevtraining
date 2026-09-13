@@ -28,6 +28,7 @@ const levelClass: Record<ConsoleEntry["level"], string> = {
   error: "text-red-400",
   debug: "text-sky-300",
   system: "text-violet-300",
+  time: "text-sky-300",
 };
 
 export function ChallengeConsole({
