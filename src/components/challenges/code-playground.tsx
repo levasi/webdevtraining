@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
-import { Check, Copy, Lightbulb, Play, RotateCcw, Terminal } from "lucide-react";
+import { AlignLeft, Check, Copy, Lightbulb, Play, RotateCcw, Terminal } from "lucide-react";
 
 import { ChallengeConsole } from "@/components/challenges/challenge-console";
 import { CodeEditor } from "@/components/challenges/code-editor";
@@ -30,6 +30,7 @@ import {
   executeChallengeCode,
   runChallengeLocally,
 } from "@/lib/challenges/run-locally";
+import { formatJavaScript } from "@/lib/playground/format-js";
 import { cn } from "@/lib/utils";
 import type { TestCase, TestResult } from "@/types";
 
@@ -152,6 +153,7 @@ export function CodePlayground({
   const [copied, setCopied] = useState(false);
   const [runError, setRunError] = useState<string | null>(null);
   const [runningCode, setRunningCode] = useState(false);
+  const [formatting, setFormatting] = useState(false);
   const [editorHeight, setEditorHeight] = useState(EDITOR_DEFAULT_HEIGHT);
   const [consoleHeight, setConsoleHeight] = useState(CONSOLE_DEFAULT_HEIGHT);
   const editorDragRef = useRef<{ startY: number; startHeight: number } | null>(
@@ -237,6 +239,28 @@ export function CodePlayground({
     await navigator.clipboard.writeText(code);
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1500);
+  }
+
+  async function formatCode() {
+    if (isVue || formatting || !hydrated) return;
+    setFormatting(true);
+    try {
+      const formatted = await formatJavaScript(code);
+      if (formatted !== code) {
+        handleCodeChange(formatted);
+      }
+    } catch (error) {
+      pushLog({
+        level: "error",
+        message:
+          error instanceof Error
+            ? `Format failed: ${error.message}`
+            : "Format failed",
+        time: Date.now(),
+      });
+    } finally {
+      setFormatting(false);
+    }
   }
 
   function beginResize(
@@ -583,6 +607,20 @@ export function CodePlayground({
             <RotateCcw className="size-3.5" />
             Reset
           </Button>
+          {!isVue && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => void formatCode()}
+              disabled={formatting || !hydrated}
+              title="Format with Prettier"
+              className="gap-1.5"
+            >
+              <AlignLeft className="size-3.5" />
+              {formatting ? "Formatting…" : "Format"}
+            </Button>
+          )}
           {hintsRemaining > 0 && (
             <Button
               type="button"
